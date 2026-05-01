@@ -5,8 +5,6 @@ import { cities, homeTypes, roomTypes } from '../data/options.js';
 
 const defaultFilters = {
   city: '',
-  minBudget: '',
-  maxBudget: '',
   roomType: '',
   homeType: '',
 };
@@ -16,12 +14,9 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
 
   const filteredListings = useMemo(() => {
     return listings.filter((listing) => {
-      const rent = Number(listing.rent);
       if (filters.city && listing.city !== filters.city) return false;
       if (filters.roomType && listing.roomType !== filters.roomType) return false;
       if (filters.homeType && listing.homeType !== filters.homeType) return false;
-      if (filters.minBudget && rent < Number(filters.minBudget)) return false;
-      if (filters.maxBudget && rent > Number(filters.maxBudget)) return false;
       return true;
     });
   }, [filters, listings]);
@@ -48,7 +43,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
         </div>
 
         <div className="mt-10 rounded-[2rem] border border-navy/10 bg-white p-4 shadow-card">
-          <div className="grid gap-3 md:grid-cols-5">
+          <div className="grid gap-3 md:grid-cols-3">
             <select className="field" value={filters.city} onChange={(event) => updateFilter('city', event.target.value)}>
               <option value="">Şehir</option>
               {cities.map((city) => (
@@ -57,22 +52,6 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
                 </option>
               ))}
             </select>
-            <input
-              className="field"
-              type="number"
-              min="0"
-              placeholder="Minimum bütçe"
-              value={filters.minBudget}
-              onChange={(event) => updateFilter('minBudget', event.target.value)}
-            />
-            <input
-              className="field"
-              type="number"
-              min="0"
-              placeholder="Maksimum bütçe"
-              value={filters.maxBudget}
-              onChange={(event) => updateFilter('maxBudget', event.target.value)}
-            />
             <select
               className="field"
               value={filters.roomType}
