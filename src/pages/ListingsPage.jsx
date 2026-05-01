@@ -83,7 +83,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
               value={filters.targetAudience}
               onChange={(event) => updateFilter('targetAudience', event.target.value)}
             >
-              <option value="">Kimin için</option>
+              <option value="">Kimler için?</option>
               {targetAudiences.map((audience) => (
                 <option key={audience} value={audience}>
                   {audience}

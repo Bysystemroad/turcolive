@@ -108,7 +108,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
             <div className="mt-8 grid gap-3 sm:grid-cols-4">
               <InfoPill label="Oda tipi" value={listing.roomType} />
               <InfoPill label="Ev tipi" value={listing.homeType} />
-              <InfoPill label="Kimin için" value={listing.targetAudience || 'Belirtilmedi'} />
+              <InfoPill label="Kimler için?" value={listing.targetAudience || 'Belirtilmedi'} />
               <InfoPill label="Kişi sayısı" value={`${listing.peopleCount} kişi`} />
             </div>
 

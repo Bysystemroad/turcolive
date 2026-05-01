@@ -44,7 +44,7 @@ export default function ListingCard({ listing, onOpen }) {
         <div className="mt-5 grid gap-3 text-sm font-semibold text-navy/70 sm:grid-cols-4">
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.roomType}</span>
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.homeType}</span>
-          <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.targetAudience || 'Kimin için belirtilmedi'}</span>
+          <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.targetAudience || 'Kimler için belirtilmedi'}</span>
           <span className="flex items-center gap-2 rounded-2xl bg-porcelain px-3 py-2">
             <UsersRound size={16} />
             {listing.peopleCount} kişi

@@ -96,7 +96,7 @@ export default function SubmitPage({ onSubmit }) {
               </p>
               <p className="flex gap-3">
                 <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
-                Kimin için uygun olduğunu açıkça belirtebilirsin.
+                Kimler için uygun olduğunu açıkça belirtebilirsin.
               </p>
             </div>
           </aside>
@@ -152,7 +152,7 @@ export default function SubmitPage({ onSubmit }) {
                 </select>
               </Field>
 
-              <Field label="Kimin için">
+              <Field label="Kimler için?">
                 <select
                   className="field"
                   required

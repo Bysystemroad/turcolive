@@ -38,7 +38,7 @@ export default function SearchBar({ compact = false }) {
         <label className="flex items-center gap-3 rounded-3xl bg-porcelain px-4 py-3.5 ring-1 ring-navy/5">
           <UsersRound className="shrink-0 text-turco" size={20} />
           <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">
-            <option>Kimin için</option>
+            <option>Kimler için?</option>
             {targetAudiences.map((audience) => (
               <option key={audience}>{audience}</option>
             ))}
