@@ -1,8 +1,9 @@
-import { ArrowRight, BadgeCheck, Building2, Camera, HeartHandshake, Image, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Building2, Camera, HeartHandshake, Image, ShieldCheck } from 'lucide-react';
 import { useEffect } from 'react';
 import SearchBar from '../components/SearchBar.jsx';
 import HowItWorks from '../components/HowItWorks.jsx';
 import TrustCards from '../components/TrustCards.jsx';
+import FAQ from '../components/FAQ.jsx';
 
 export default function HomePage({ onNavigate }) {
   useEffect(() => {
@@ -137,6 +138,7 @@ export default function HomePage({ onNavigate }) {
 
       <HowItWorks />
       <TrustCards />
+      <FAQ />
 
       <section className="bg-white px-4 py-24 sm:px-6 lg:px-8">
         <div className="brand-gradient mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] p-8 text-white shadow-lift sm:p-12 lg:p-16">
