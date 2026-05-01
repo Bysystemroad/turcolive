@@ -10,6 +10,7 @@ const textFields = [
   'deposit',
   'roomType',
   'homeType',
+  'targetAudience',
   'peopleCount',
   'description',
   'contact',

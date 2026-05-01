@@ -1,12 +1,13 @@
 import { useMemo, useState } from 'react';
 import EmptyState from '../components/EmptyState.jsx';
 import ListingCard from '../components/ListingCard.jsx';
-import { cities, homeTypes, roomTypes } from '../data/options.js';
+import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 
 const defaultFilters = {
   city: '',
   roomType: '',
   homeType: '',
+  targetAudience: '',
 };
 
 export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
@@ -17,6 +18,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
       if (filters.city && listing.city !== filters.city) return false;
       if (filters.roomType && listing.roomType !== filters.roomType) return false;
       if (filters.homeType && listing.homeType !== filters.homeType) return false;
+      if (filters.targetAudience && listing.targetAudience !== filters.targetAudience) return false;
       return true;
     });
   }, [filters, listings]);
@@ -43,7 +45,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
         </div>
 
         <div className="mt-10 rounded-[2rem] border border-navy/10 bg-white p-4 shadow-card">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <select className="field" value={filters.city} onChange={(event) => updateFilter('city', event.target.value)}>
               <option value="">Şehir</option>
               {cities.map((city) => (
@@ -73,6 +75,18 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
               {homeTypes.map((type) => (
                 <option key={type} value={type}>
                   {type}
+                </option>
+              ))}
+            </select>
+            <select
+              className="field"
+              value={filters.targetAudience}
+              onChange={(event) => updateFilter('targetAudience', event.target.value)}
+            >
+              <option value="">Kimin için</option>
+              {targetAudiences.map((audience) => (
+                <option key={audience} value={audience}>
+                  {audience}
                 </option>
               ))}
             </select>

@@ -6,9 +6,7 @@ export default function ListingCard({ listing, onOpen }) {
   const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
 
   return (
-    <article
-      className="overflow-hidden rounded-[2.25rem] border border-navy/10 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-lift"
-    >
+    <article className="overflow-hidden rounded-[2.25rem] border border-navy/10 bg-white shadow-card transition hover:-translate-y-1 hover:shadow-lift">
       <button type="button" onClick={() => onOpen(listing.id)} className="block w-full text-left">
         <div className="relative aspect-[16/10] bg-porcelain">
           {hasImagePreview ? (
@@ -43,9 +41,10 @@ export default function ListingCard({ listing, onOpen }) {
             <p className="rounded-2xl bg-blush px-4 py-2 text-lg font-black text-turco ring-1 ring-turco/10">€{listing.rent}</p>
           </div>
         </button>
-        <div className="mt-5 grid gap-3 text-sm font-semibold text-navy/70 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 text-sm font-semibold text-navy/70 sm:grid-cols-4">
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.roomType}</span>
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.homeType}</span>
+          <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.targetAudience || 'Kimin için belirtilmedi'}</span>
           <span className="flex items-center gap-2 rounded-2xl bg-porcelain px-3 py-2">
             <UsersRound size={16} />
             {listing.peopleCount} kişi

@@ -88,6 +88,12 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
             <ShieldCheck size={17} />
             Topluluk ilanı
           </span>
+          {listing.targetAudience && (
+            <span className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-black text-navy shadow-sm ring-1 ring-navy/10">
+              <UsersRound size={17} />
+              {listing.targetAudience}
+            </span>
+          )}
         </div>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_22rem]">
@@ -99,9 +105,10 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
               {listing.city}, {listing.district}
             </p>
 
-            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="mt-8 grid gap-3 sm:grid-cols-4">
               <InfoPill label="Oda tipi" value={listing.roomType} />
               <InfoPill label="Ev tipi" value={listing.homeType} />
+              <InfoPill label="Kimin için" value={listing.targetAudience || 'Belirtilmedi'} />
               <InfoPill label="Kişi sayısı" value={`${listing.peopleCount} kişi`} />
             </div>
 

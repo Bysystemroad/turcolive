@@ -1,6 +1,6 @@
 import { CheckCircle2, ImagePlus, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { cities, homeTypes, roomTypes } from '../data/options.js';
+import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 
 const initialForm = {
   title: '',
@@ -10,6 +10,7 @@ const initialForm = {
   deposit: '',
   roomType: '',
   homeType: '',
+  targetAudience: '',
   peopleCount: '',
   description: '',
   contact: '',
@@ -61,6 +62,7 @@ export default function SubmitPage({ onSubmit }) {
       deposit: form.deposit,
       roomType: form.roomType,
       homeType: form.homeType,
+      targetAudience: form.targetAudience,
       peopleCount: form.peopleCount,
       description: form.description,
       contact: form.contact,
@@ -94,7 +96,7 @@ export default function SubmitPage({ onSubmit }) {
               </p>
               <p className="flex gap-3">
                 <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
-                Fotoğraflar bu MVP sürümünde sadece geçici önizleme olarak tutulur.
+                Kimin için uygun olduğunu açıkça belirtebilirsin.
               </p>
             </div>
           </aside>
@@ -145,6 +147,22 @@ export default function SubmitPage({ onSubmit }) {
                   {homeTypes.map((type) => (
                     <option key={type} value={type}>
                       {type}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Kimin için">
+                <select
+                  className="field"
+                  required
+                  value={form.targetAudience}
+                  onChange={(event) => update('targetAudience', event.target.value)}
+                >
+                  <option value="">Seç</option>
+                  {targetAudiences.map((audience) => (
+                    <option key={audience} value={audience}>
+                      {audience}
                     </option>
                   ))}
                 </select>
