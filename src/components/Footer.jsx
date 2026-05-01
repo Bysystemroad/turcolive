@@ -12,7 +12,10 @@ export default function Footer() {
         </div>
 
         <div className="flex flex-col gap-4 md:items-end">
-          <p>TurcoLive — İtalya’daki Türkler için ev ve oda paylaşım platformu.</p>
+          <div className="space-y-1 md:text-right">
+            <p>TurcoLive — İtalya’daki Türkler için ev ve oda paylaşım platformu.</p>
+            <p>© 2026 TurcoLive - Tüm hakları saklıdır.</p>
+          </div>
           <div className="flex items-center gap-3">
             <a
               className="grid h-11 w-11 place-items-center rounded-full bg-porcelain text-navy ring-1 ring-navy/10 transition hover:-translate-y-0.5 hover:bg-blush hover:text-turco"
