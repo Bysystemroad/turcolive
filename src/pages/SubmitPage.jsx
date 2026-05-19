@@ -1,6 +1,8 @@
+import { motion } from 'framer-motion';
 import { CheckCircle2, ImagePlus, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
+import { fadeUp, stagger } from '../motion.js';
 
 const initialForm = {
   title: '',
@@ -74,35 +76,47 @@ export default function SubmitPage({ onSubmit }) {
   };
 
   return (
-    <section className="bg-porcelain py-14 sm:py-20">
+    <section className="soft-grid relative overflow-hidden bg-porcelain py-14 sm:py-20">
+      <div className="pointer-events-none absolute -left-28 top-24 h-80 w-80 rounded-full bg-turco/10 blur-3xl" />
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr]">
-          <aside className="brand-gradient rounded-[2.5rem] p-8 text-white shadow-lift lg:sticky lg:top-28 lg:h-fit">
-            <img
+          <motion.aside
+            className="brand-gradient rounded-[2.5rem] p-8 text-white shadow-lift lg:sticky lg:top-28 lg:h-fit"
+            initial={{ opacity: 0, x: -32 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.65 }}
+          >
+            <motion.img
               className="h-20 w-20 rounded-3xl bg-white object-contain p-1 shadow-card"
               src="/brand/turcolive-logo-cropped.png"
               alt="TurcoLive logosu"
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             />
             <p className="mt-8 text-sm font-black uppercase tracking-[0.2em] text-coral">İlan Ver</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight">Evin veya odan için güven veren bir ilan oluştur.</h1>
             <div className="mt-8 space-y-4 text-sm leading-6 text-white/78">
-              <p className="flex gap-3">
-                <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
-                TurcoLive ödeme veya rezervasyon platformu değildir.
-              </p>
-              <p className="flex gap-3">
-                <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
-                İlanlara istediğin kadar fotoğraf ekleyebilirsin.
-              </p>
-              <p className="flex gap-3">
-                <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
-                Kimler için uygun olduğunu açıkça belirtebilirsin.
-              </p>
+              {[
+                'TurcoLive ödeme veya rezervasyon platformu değildir.',
+                'İlanlara istediğin kadar fotoğraf ekleyebilirsin.',
+                'Kimler için uygun olduğunu açıkça belirtebilirsin.',
+              ].map((text) => (
+                <p key={text} className="flex gap-3">
+                  <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
+                  {text}
+                </p>
+              ))}
             </div>
-          </aside>
+          </motion.aside>
 
-          <form onSubmit={handleSubmit} className="rounded-[2.5rem] border border-navy/10 bg-white p-5 shadow-card sm:p-8">
-            <div className="grid gap-5 sm:grid-cols-2">
+          <motion.form
+            onSubmit={handleSubmit}
+            className="premium-surface rounded-[2.5rem] border border-white/80 p-5 ring-1 ring-navy/5 sm:p-8"
+            variants={stagger}
+            initial="hidden"
+            animate="show"
+          >
+            <motion.div className="grid gap-5 sm:grid-cols-2" variants={stagger}>
               <Field label="İlan başlığı" className="sm:col-span-2">
                 <input className="field" required value={form.title} onChange={(event) => update('title', event.target.value)} />
               </Field>
@@ -153,12 +167,7 @@ export default function SubmitPage({ onSubmit }) {
               </Field>
 
               <Field label="Kimler için?">
-                <select
-                  className="field"
-                  required
-                  value={form.targetAudience}
-                  onChange={(event) => update('targetAudience', event.target.value)}
-                >
+                <select className="field" required value={form.targetAudience} onChange={(event) => update('targetAudience', event.target.value)}>
                   <option value="">Seç</option>
                   {targetAudiences.map((audience) => (
                     <option key={audience} value={audience}>
@@ -169,14 +178,7 @@ export default function SubmitPage({ onSubmit }) {
               </Field>
 
               <Field label="Kaç kişi yaşıyor">
-                <input
-                  className="field"
-                  required
-                  min="0"
-                  type="number"
-                  value={form.peopleCount}
-                  onChange={(event) => update('peopleCount', event.target.value)}
-                />
+                <input className="field" required min="0" type="number" value={form.peopleCount} onChange={(event) => update('peopleCount', event.target.value)} />
               </Field>
 
               <Field label="Açıklama" className="sm:col-span-2">
@@ -193,7 +195,7 @@ export default function SubmitPage({ onSubmit }) {
                 />
               </Field>
 
-              <div className="sm:col-span-2">
+              <motion.div className="sm:col-span-2" variants={fadeUp}>
                 <UploadField
                   label="Fotoğraf yükleme"
                   accept="image/*"
@@ -203,27 +205,35 @@ export default function SubmitPage({ onSubmit }) {
                   requiredText="Zorunlu"
                   onChange={(files) => update('imageFiles', [...form.imageFiles, ...files])}
                 />
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
 
             {imageError && (
-              <p className="mt-5 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10">{imageError}</p>
+              <motion.p
+                className="mt-5 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {imageError}
+              </motion.p>
             )}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-navy/55">
                 Gönderilen metin bilgileri tarayıcıda saklanır; fotoğraflar sayfa yenilenince kalıcı olmaz.
               </p>
-              <button
+              <motion.button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-turco px-7 py-4 text-sm font-black text-white shadow-card transition hover:-translate-y-0.5 hover:bg-coral disabled:cursor-not-allowed disabled:opacity-60"
+                className="premium-button disabled:cursor-not-allowed disabled:opacity-60"
+                whileHover={{ scale: 1.04, y: -3 }}
+                whileTap={{ scale: 0.97 }}
               >
                 <UploadCloud size={19} />
                 {submitting ? 'Kaydediliyor' : 'İlanı Gönder'}
-              </button>
+              </motion.button>
             </div>
-          </form>
+          </motion.form>
         </div>
       </div>
     </section>
@@ -232,10 +242,10 @@ export default function SubmitPage({ onSubmit }) {
 
 function Field({ label, children, className = '' }) {
   return (
-    <label className={`grid gap-2 ${className}`}>
+    <motion.label className={`grid gap-2 ${className}`} variants={fadeUp}>
       <span className="label">{label}</span>
       {children}
-    </label>
+    </motion.label>
   );
 }
 
@@ -267,15 +277,17 @@ function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount,
           {requiredText && <span className="rounded-full bg-blush px-3 py-1 text-xs font-black text-turco ring-1 ring-turco/10">{requiredText}</span>}
         </div>
       </div>
-      <label className="group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed border-navy/20 bg-porcelain p-4 text-center transition hover:border-turco/60 hover:bg-white">
+      <label className="group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed border-navy/20 bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white">
         {previews.length > 0 ? (
           <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {previews.map((preview, index) => (
-              <img
+              <motion.img
                 key={preview}
                 className="aspect-[4/3] w-full rounded-2xl object-cover shadow-sm ring-1 ring-navy/10"
                 src={preview}
                 alt={`Seçilen fotoğraf ${index + 1}`}
+                initial={{ opacity: 0, scale: 0.94 }}
+                animate={{ opacity: 1, scale: 1 }}
               />
             ))}
           </div>

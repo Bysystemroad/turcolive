@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
+import { fadeUp, stagger } from '../motion.js';
 
 const faqs = [
   {
@@ -30,23 +32,24 @@ export default function FAQ() {
   return (
     <section className="bg-white px-4 py-24 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.78fr_1fr] lg:items-start">
-        <div className="lg:sticky lg:top-28">
-          <p className="text-sm font-black uppercase tracking-[0.2em] text-turco">SSS</p>
-          <h2 className="mt-5 max-w-xl text-4xl font-black tracking-tight text-navy sm:text-5xl">
+        <motion.div className="lg:sticky lg:top-28" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
+          <motion.p variants={fadeUp} className="text-sm font-black uppercase tracking-[0.2em] text-turco">SSS</motion.p>
+          <motion.h2 variants={fadeUp} className="mt-5 max-w-xl text-4xl font-black tracking-tight text-navy sm:text-5xl">
             Sıkça sorulan sorular
-          </h2>
-          <p className="mt-5 max-w-lg text-base leading-7 text-navy/62">
+          </motion.h2>
+          <motion.p variants={fadeUp} className="mt-5 max-w-lg text-base leading-7 text-navy/62">
             TurcoLive’ın nasıl çalıştığını, ilan paylaşımının kapsamını ve mevcut MVP deneyimini buradan hızlıca inceleyebilirsin.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
-        <div className="space-y-4">
+        <motion.div className="space-y-4" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
           {faqs.map((item, index) => {
             const isOpen = openIndex === index;
 
             return (
-              <article
+              <motion.article
                 key={item.question}
+                variants={fadeUp}
                 className="overflow-hidden rounded-[1.75rem] border border-navy/10 bg-porcelain shadow-sm transition hover:shadow-card"
               >
                 <button
@@ -56,28 +59,32 @@ export default function FAQ() {
                   onClick={() => setOpenIndex(isOpen ? -1 : index)}
                 >
                   <span className="text-lg font-black text-navy">{item.question}</span>
-                  <span
-                    className={`grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-turco shadow-sm ring-1 ring-navy/10 transition ${
-                      isOpen ? 'rotate-180' : ''
-                    }`}
+                  <motion.span
+                    className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-turco shadow-sm ring-1 ring-navy/10"
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.25 }}
                   >
                     <ChevronDown size={20} />
-                  </span>
+                  </motion.span>
                 </button>
 
-                <div
-                  className={`grid transition-all duration-300 ease-out ${
-                    isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
-                  }`}
-                >
-                  <div className="overflow-hidden">
-                    <p className="px-6 pb-7 text-base leading-7 text-navy/65 sm:px-8">{item.answer}</p>
-                  </div>
-                </div>
-              </article>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.28, ease: 'easeOut' }}
+                      className="overflow-hidden"
+                    >
+                      <p className="px-6 pb-7 text-base leading-7 text-navy/65 sm:px-8">{item.answer}</p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.article>
             );
           })}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

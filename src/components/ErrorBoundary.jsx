@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="mt-6 rounded-full bg-turco px-6 py-3 text-sm font-black text-white shadow-card transition hover:bg-coral"
+              className="premium-button mt-6"
             >
               Sayfayı Yenile
             </button>

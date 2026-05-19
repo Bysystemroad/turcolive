@@ -1,7 +1,9 @@
+import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import EmptyState from '../components/EmptyState.jsx';
 import ListingCard from '../components/ListingCard.jsx';
 import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
+import { fadeUp, stagger } from '../motion.js';
 
 const defaultFilters = {
   city: '',
@@ -26,25 +28,33 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
   const updateFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
 
   return (
-    <section className="bg-porcelain py-14 sm:py-20">
+    <section className="soft-grid relative overflow-hidden bg-porcelain py-14 sm:py-20">
+      <div className="pointer-events-none absolute -right-24 top-24 h-80 w-80 rounded-full bg-turco/10 blur-3xl" />
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <motion.div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between" variants={stagger} initial="hidden" animate="show">
           <div>
-            <p className="text-sm font-black uppercase tracking-[0.2em] text-turco">İlanlar</p>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-navy sm:text-6xl">
+            <motion.p variants={fadeUp} className="text-sm font-black uppercase tracking-[0.2em] text-turco">İlanlar</motion.p>
+            <motion.h1 variants={fadeUp} className="mt-4 text-4xl font-black tracking-tight text-navy sm:text-6xl">
               Ev, oda ve ev arkadaşı ilanları
-            </h1>
+            </motion.h1>
           </div>
-          <button
+          <motion.button
             type="button"
             onClick={() => onNavigate('ilan-ver')}
-            className="rounded-full bg-turco px-7 py-3.5 text-sm font-black text-white shadow-card transition hover:-translate-y-0.5 hover:bg-coral"
+            className="premium-button"
+            whileHover={{ scale: 1.04, y: -3 }}
+            whileTap={{ scale: 0.97 }}
           >
             İlan Ver
-          </button>
-        </div>
+          </motion.button>
+        </motion.div>
 
-        <div className="mt-10 rounded-[2rem] border border-navy/10 bg-white p-4 shadow-card">
+        <motion.div
+          className="premium-surface mt-10 rounded-[2rem] border border-white/80 p-4 ring-1 ring-navy/5"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.55, delay: 0.12 }}
+        >
           <div className="grid gap-3 md:grid-cols-4">
             <select className="field" value={filters.city} onChange={(event) => updateFilter('city', event.target.value)}>
               <option value="">Şehir</option>
@@ -54,11 +64,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
                 </option>
               ))}
             </select>
-            <select
-              className="field"
-              value={filters.roomType}
-              onChange={(event) => updateFilter('roomType', event.target.value)}
-            >
+            <select className="field" value={filters.roomType} onChange={(event) => updateFilter('roomType', event.target.value)}>
               <option value="">Oda tipi</option>
               {roomTypes.map((type) => (
                 <option key={type} value={type}>
@@ -66,11 +72,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
                 </option>
               ))}
             </select>
-            <select
-              className="field"
-              value={filters.homeType}
-              onChange={(event) => updateFilter('homeType', event.target.value)}
-            >
+            <select className="field" value={filters.homeType} onChange={(event) => updateFilter('homeType', event.target.value)}>
               <option value="">Ev tipi</option>
               {homeTypes.map((type) => (
                 <option key={type} value={type}>
@@ -78,11 +80,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
                 </option>
               ))}
             </select>
-            <select
-              className="field"
-              value={filters.targetAudience}
-              onChange={(event) => updateFilter('targetAudience', event.target.value)}
-            >
+            <select className="field" value={filters.targetAudience} onChange={(event) => updateFilter('targetAudience', event.target.value)}>
               <option value="">Kimler için?</option>
               {targetAudiences.map((audience) => (
                 <option key={audience} value={audience}>
@@ -91,22 +89,26 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
               ))}
             </select>
           </div>
-        </div>
+        </motion.div>
 
         <div className="mt-8">
           {listings.length === 0 ? (
             <EmptyState onNavigate={onNavigate} />
           ) : filteredListings.length === 0 ? (
-            <div className="rounded-[2rem] border border-navy/10 bg-white p-10 text-center shadow-card">
+            <motion.div
+              className="rounded-[2rem] border border-navy/10 bg-white p-10 text-center shadow-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <h2 className="text-2xl font-black text-navy">Bu filtrelerle eşleşen ilan bulunmuyor.</h2>
               <p className="mt-3 text-navy/65">Filtreleri değiştirerek tekrar deneyebilirsin.</p>
-            </div>
+            </motion.div>
           ) : (
-            <div className="grid gap-6 lg:grid-cols-2">
+            <motion.div className="grid gap-6 lg:grid-cols-2" variants={stagger} initial="hidden" animate="show">
               {filteredListings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} onOpen={onOpenListing} />
               ))}
-            </div>
+            </motion.div>
           )}
         </div>
       </div>

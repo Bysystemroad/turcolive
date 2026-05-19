@@ -1,56 +1,69 @@
-import { MapPin, Search, UsersRound } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Building2, MapPin, Search, UsersRound } from 'lucide-react';
 import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 
 export default function SearchBar({ compact = false }) {
   return (
-    <div className={`rounded-[2rem] border border-navy/10 bg-white p-3 shadow-lift ${compact ? '' : 'lg:-mt-11'}`}>
+    <motion.div
+      className={`premium-surface rounded-[2rem] border border-white/70 p-3 ring-1 ring-navy/5 ${compact ? '' : 'lg:-mt-11'}`}
+      initial={{ opacity: 0, y: 22, scale: 0.98 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: true, margin: '-80px' }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+    >
       <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-[1.15fr_1fr_1fr_1fr_auto]">
-        <label className="flex items-center gap-3 rounded-3xl bg-porcelain px-4 py-3.5 ring-1 ring-navy/5">
-          <MapPin className="shrink-0 text-turco" size={20} />
-          <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">
-            <option>Şehir</option>
-            {cities.map((city) => (
-              <option key={city}>{city}</option>
-            ))}
-          </select>
-        </label>
+        <Filter icon={MapPin} label="Şehir">
+          <option>Şehir</option>
+          {cities.map((city) => (
+            <option key={city}>{city}</option>
+          ))}
+        </Filter>
 
-        <label className="flex items-center gap-3 rounded-3xl bg-porcelain px-4 py-3.5 ring-1 ring-navy/5">
-          <Search className="shrink-0 text-turco" size={20} />
-          <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">
-            <option>Oda Tipi</option>
-            {roomTypes.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
-        </label>
+        <Filter icon={Search} label="Oda Tipi">
+          <option>Oda Tipi</option>
+          {roomTypes.map((type) => (
+            <option key={type}>{type}</option>
+          ))}
+        </Filter>
 
-        <label className="flex items-center gap-3 rounded-3xl bg-porcelain px-4 py-3.5 ring-1 ring-navy/5">
-          <Search className="shrink-0 text-turco" size={20} />
-          <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">
-            <option>Ev Tipi</option>
-            {homeTypes.map((type) => (
-              <option key={type}>{type}</option>
-            ))}
-          </select>
-        </label>
+        <Filter icon={Building2} label="Ev Tipi">
+          <option>Ev Tipi</option>
+          {homeTypes.map((type) => (
+            <option key={type}>{type}</option>
+          ))}
+        </Filter>
 
-        <label className="flex items-center gap-3 rounded-3xl bg-porcelain px-4 py-3.5 ring-1 ring-navy/5">
-          <UsersRound className="shrink-0 text-turco" size={20} />
-          <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">
-            <option>Kimler için?</option>
-            {targetAudiences.map((audience) => (
-              <option key={audience}>{audience}</option>
-            ))}
-          </select>
-        </label>
+        <Filter icon={UsersRound} label="Kimler için?">
+          <option>Kimler için?</option>
+          {targetAudiences.map((audience) => (
+            <option key={audience}>{audience}</option>
+          ))}
+        </Filter>
 
         {!compact && (
-          <button className="rounded-3xl bg-turco px-7 py-3.5 text-sm font-black text-white shadow-card transition hover:bg-coral md:col-span-4 lg:col-span-1">
+          <motion.button
+            className="premium-button md:col-span-4 lg:col-span-1"
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+          >
             Ara
-          </button>
+          </motion.button>
         )}
       </div>
-    </div>
+    </motion.div>
+  );
+}
+
+function Filter({ icon: Icon, children }) {
+  return (
+    <motion.label
+      className="group flex items-center gap-3 rounded-3xl bg-white/80 px-4 py-3.5 ring-1 ring-navy/8 transition hover:bg-white hover:shadow-sm"
+      whileHover={{ y: -2 }}
+    >
+      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-blush text-turco transition group-hover:bg-turco group-hover:text-white">
+        <Icon size={19} />
+      </span>
+      <select className="w-full bg-transparent text-sm font-extrabold text-navy outline-none">{children}</select>
+    </motion.label>
   );
 }
