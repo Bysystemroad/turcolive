@@ -3,6 +3,7 @@ const STORAGE_KEY = 'turcolive_listings';
 const textFields = [
   'id',
   'createdAt',
+  'fullName',
   'title',
   'city',
   'district',

@@ -5,6 +5,7 @@ import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.j
 import { fadeUp, stagger } from '../motion.js';
 
 const initialForm = {
+  fullName: '',
   title: '',
   city: '',
   district: '',
@@ -19,6 +20,22 @@ const initialForm = {
   imageFiles: [],
 };
 
+const requiredMessages = {
+  fullName: 'Ad soyad alanı zorunludur.',
+  title: 'İlan başlığı alanı zorunludur.',
+  city: 'Şehir seçmelisiniz.',
+  district: 'Adres alanı zorunludur.',
+  rent: 'Aylık kira alanı zorunludur.',
+  deposit: 'Depozito alanı zorunludur.',
+  roomType: 'Oda tipi seçmelisiniz.',
+  homeType: 'Ev tipi seçmelisiniz.',
+  targetAudience: 'Kimler için alanını seçmelisiniz.',
+  peopleCount: 'Kaç kişi yaşıyor alanı zorunludur.',
+  description: 'Açıklama alanı zorunludur.',
+  contact: 'İletişim bilgisi alanı zorunludur.',
+  imageFiles: 'En az 4 fotoğraf yüklemelisiniz.',
+};
+
 function useObjectUrls(files) {
   const urls = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
 
@@ -31,23 +48,46 @@ function useObjectUrls(files) {
   return urls;
 }
 
+function validateForm(form) {
+  const nextErrors = {};
+
+  Object.entries(requiredMessages).forEach(([field, message]) => {
+    if (field === 'imageFiles') {
+      if (form.imageFiles.length < 4) nextErrors.imageFiles = message;
+      return;
+    }
+
+    if (!String(form[field] || '').trim()) {
+      nextErrors[field] = message;
+    }
+  });
+
+  return nextErrors;
+}
+
 export default function SubmitPage({ onSubmit }) {
   const [form, setForm] = useState(initialForm);
-  const [imageError, setImageError] = useState('');
+  const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
 
   const imagePreviews = useObjectUrls(form.imageFiles);
 
   const update = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
-    if (key === 'imageFiles' && value.length > 0) setImageError('');
+    setErrors((current) => {
+      if (!current[key]) return current;
+      const next = { ...current };
+      delete next[key];
+      return next;
+    });
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (form.imageFiles.length === 0) {
-      setImageError('İlanın yayınlanabilmesi için en az bir fotoğraf yüklenmelidir.');
+    const nextErrors = validateForm(form);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
       return;
     }
 
@@ -57,23 +97,26 @@ export default function SubmitPage({ onSubmit }) {
     onSubmit({
       id: crypto.randomUUID(),
       createdAt: new Date().toISOString(),
-      title: form.title,
+      fullName: form.fullName.trim(),
+      title: form.title.trim(),
       city: form.city,
-      district: form.district,
+      district: form.district.trim(),
       rent: form.rent,
       deposit: form.deposit,
       roomType: form.roomType,
       homeType: form.homeType,
       targetAudience: form.targetAudience,
       peopleCount: form.peopleCount,
-      description: form.description,
-      contact: form.contact,
+      description: form.description.trim(),
+      contact: form.contact.trim(),
       imageFileNames: form.imageFiles.map((file) => file.name),
       imageUrls: submittedImageUrls,
     });
 
     setSubmitting(false);
   };
+
+  const fieldClass = (field) => `field ${errors[field] ? 'border-turco ring-2 ring-turco/20' : ''}`;
 
   return (
     <section className="soft-grid relative overflow-hidden bg-porcelain py-14 sm:py-20">
@@ -111,18 +154,29 @@ export default function SubmitPage({ onSubmit }) {
 
           <motion.form
             onSubmit={handleSubmit}
+            noValidate
             className="premium-surface rounded-[2.5rem] border border-white/80 p-5 ring-1 ring-navy/5 sm:p-8"
             variants={stagger}
             initial="hidden"
             animate="show"
           >
             <motion.div className="grid gap-5 sm:grid-cols-2" variants={stagger}>
-              <Field label="İlan başlığı" className="sm:col-span-2">
-                <input className="field" required value={form.title} onChange={(event) => update('title', event.target.value)} />
+              <Field label="Ad Soyad" error={errors.fullName} className="sm:col-span-2">
+                <input
+                  className={fieldClass('fullName')}
+                  required
+                  placeholder="Örn: Canberk Saka"
+                  value={form.fullName}
+                  onChange={(event) => update('fullName', event.target.value)}
+                />
               </Field>
 
-              <Field label="Şehir">
-                <select className="field" required value={form.city} onChange={(event) => update('city', event.target.value)}>
+              <Field label="İlan başlığı" error={errors.title} className="sm:col-span-2">
+                <input className={fieldClass('title')} required value={form.title} onChange={(event) => update('title', event.target.value)} />
+              </Field>
+
+              <Field label="Şehir" error={errors.city}>
+                <select className={fieldClass('city')} required value={form.city} onChange={(event) => update('city', event.target.value)}>
                   <option value="">Seç</option>
                   {cities.map((city) => (
                     <option key={city} value={city}>
@@ -132,20 +186,20 @@ export default function SubmitPage({ onSubmit }) {
                 </select>
               </Field>
 
-              <Field label="Adres">
-                <input className="field" required value={form.district} onChange={(event) => update('district', event.target.value)} />
+              <Field label="Adres" error={errors.district}>
+                <input className={fieldClass('district')} required value={form.district} onChange={(event) => update('district', event.target.value)} />
               </Field>
 
-              <Field label="Aylık kira">
-                <EuroInput required value={form.rent} onChange={(value) => update('rent', value)} />
+              <Field label="Aylık kira" error={errors.rent}>
+                <EuroInput required error={errors.rent} value={form.rent} onChange={(value) => update('rent', value)} />
               </Field>
 
-              <Field label="Depozito">
-                <EuroInput required value={form.deposit} onChange={(value) => update('deposit', value)} />
+              <Field label="Depozito" error={errors.deposit}>
+                <EuroInput required error={errors.deposit} value={form.deposit} onChange={(value) => update('deposit', value)} />
               </Field>
 
-              <Field label="Oda tipi">
-                <select className="field" required value={form.roomType} onChange={(event) => update('roomType', event.target.value)}>
+              <Field label="Oda tipi" error={errors.roomType}>
+                <select className={fieldClass('roomType')} required value={form.roomType} onChange={(event) => update('roomType', event.target.value)}>
                   <option value="">Seç</option>
                   {roomTypes.map((type) => (
                     <option key={type} value={type}>
@@ -155,8 +209,8 @@ export default function SubmitPage({ onSubmit }) {
                 </select>
               </Field>
 
-              <Field label="Ev tipi">
-                <select className="field" required value={form.homeType} onChange={(event) => update('homeType', event.target.value)}>
+              <Field label="Ev tipi" error={errors.homeType}>
+                <select className={fieldClass('homeType')} required value={form.homeType} onChange={(event) => update('homeType', event.target.value)}>
                   <option value="">Seç</option>
                   {homeTypes.map((type) => (
                     <option key={type} value={type}>
@@ -166,8 +220,8 @@ export default function SubmitPage({ onSubmit }) {
                 </select>
               </Field>
 
-              <Field label="Kimler için?">
-                <select className="field" required value={form.targetAudience} onChange={(event) => update('targetAudience', event.target.value)}>
+              <Field label="Kimler için?" error={errors.targetAudience}>
+                <select className={fieldClass('targetAudience')} required value={form.targetAudience} onChange={(event) => update('targetAudience', event.target.value)}>
                   <option value="">Seç</option>
                   {targetAudiences.map((audience) => (
                     <option key={audience} value={audience}>
@@ -177,17 +231,17 @@ export default function SubmitPage({ onSubmit }) {
                 </select>
               </Field>
 
-              <Field label="Kaç kişi yaşıyor">
-                <input className="field" required min="0" type="number" value={form.peopleCount} onChange={(event) => update('peopleCount', event.target.value)} />
+              <Field label="Kaç kişi yaşıyor" error={errors.peopleCount}>
+                <input className={fieldClass('peopleCount')} required min="0" type="number" value={form.peopleCount} onChange={(event) => update('peopleCount', event.target.value)} />
               </Field>
 
-              <Field label="Açıklama" className="sm:col-span-2">
-                <textarea className="field min-h-36 resize-y" required value={form.description} onChange={(event) => update('description', event.target.value)} />
+              <Field label="Açıklama" error={errors.description} className="sm:col-span-2">
+                <textarea className={`${fieldClass('description')} min-h-36 resize-y`} required value={form.description} onChange={(event) => update('description', event.target.value)} />
               </Field>
 
-              <Field label="İletişim bilgisi" className="sm:col-span-2">
+              <Field label="İletişim bilgisi" error={errors.contact} className="sm:col-span-2">
                 <input
-                  className="field"
+                  className={fieldClass('contact')}
                   required
                   placeholder="Telefon, e-posta veya sosyal medya hesabı"
                   value={form.contact}
@@ -202,21 +256,12 @@ export default function SubmitPage({ onSubmit }) {
                   icon={ImagePlus}
                   previews={imagePreviews}
                   fileCount={form.imageFiles.length}
+                  error={errors.imageFiles}
                   requiredText="Zorunlu"
                   onChange={(files) => update('imageFiles', [...form.imageFiles, ...files])}
                 />
               </motion.div>
             </motion.div>
-
-            {imageError && (
-              <motion.p
-                className="mt-5 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                {imageError}
-              </motion.p>
-            )}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-navy/55">
@@ -240,21 +285,24 @@ export default function SubmitPage({ onSubmit }) {
   );
 }
 
-function Field({ label, children, className = '' }) {
+function Field({ label, children, error, className = '' }) {
   return (
     <motion.label className={`grid gap-2 ${className}`} variants={fadeUp}>
-      <span className="label">{label}</span>
+      <span className="label">
+        {label} <span className="text-turco">*</span>
+      </span>
       {children}
+      {error && <p className="text-sm font-extrabold text-turco">{error}</p>}
     </motion.label>
   );
 }
 
-function EuroInput({ value, onChange, required = false }) {
+function EuroInput({ value, onChange, required = false, error = '' }) {
   return (
     <div className="relative">
       <span className="pointer-events-none absolute left-4 top-1/2 z-10 -translate-y-1/2 text-sm font-black text-turco">€</span>
       <input
-        className="field"
+        className={`field ${error ? 'border-turco ring-2 ring-turco/20' : ''}`}
         style={{ paddingLeft: '3rem' }}
         required={required}
         min="0"
@@ -267,17 +315,23 @@ function EuroInput({ value, onChange, required = false }) {
   );
 }
 
-function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount, requiredText = '' }) {
+function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount, error = '', requiredText = '' }) {
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
-        <span className="label">{label}</span>
+        <span className="label">
+          {label} <span className="text-turco">*</span>
+        </span>
         <div className="flex items-center gap-2">
           {fileCount > 0 && <span className="rounded-full bg-porcelain px-3 py-1 text-xs font-black text-navy">{fileCount} fotoğraf</span>}
           {requiredText && <span className="rounded-full bg-blush px-3 py-1 text-xs font-black text-turco ring-1 ring-turco/10">{requiredText}</span>}
         </div>
       </div>
-      <label className="group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed border-navy/20 bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white">
+      <label
+        className={`group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white ${
+          error ? 'border-turco ring-2 ring-turco/20' : 'border-navy/20'
+        }`}
+      >
         {previews.length > 0 ? (
           <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {previews.map((preview, index) => (
@@ -304,12 +358,14 @@ function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount,
           type="file"
           accept={accept}
           multiple
+          required
           onChange={(event) => {
             onChange(Array.from(event.target.files || []));
             event.target.value = '';
           }}
         />
       </label>
+      {error && <p className="text-sm font-extrabold text-turco">{error}</p>}
     </div>
   );
 }
