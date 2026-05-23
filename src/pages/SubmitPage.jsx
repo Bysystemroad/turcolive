@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, ImagePlus, UploadCloud } from 'lucide-react';
+import { CheckCircle2, ImagePlus, Info, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 import { fadeUp, stagger } from '../motion.js';
@@ -327,6 +327,10 @@ function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount,
           {requiredText && <span className="rounded-full bg-blush px-3 py-1 text-xs font-black text-turco ring-1 ring-turco/10">{requiredText}</span>}
         </div>
       </div>
+      <p className="inline-flex items-center gap-2 text-sm font-extrabold text-navy/68">
+        <Info size={16} className="text-turco" />
+        En az 4 fotoğraf yüklemelisiniz.
+      </p>
       <label
         className={`group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white ${
           error ? 'border-turco ring-2 ring-turco/20' : 'border-navy/20'
