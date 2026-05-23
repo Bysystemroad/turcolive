@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { useMemo, useState } from 'react';
 import EmptyState from '../components/EmptyState.jsx';
 import ListingCard from '../components/ListingCard.jsx';
-import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
+import { cities, genderPreferences, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 import { fadeUp, stagger } from '../motion.js';
 
 const defaultFilters = {
@@ -10,6 +10,7 @@ const defaultFilters = {
   roomType: '',
   homeType: '',
   targetAudience: '',
+  genderPreference: '',
 };
 
 export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
@@ -21,6 +22,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
       if (filters.roomType && listing.roomType !== filters.roomType) return false;
       if (filters.homeType && listing.homeType !== filters.homeType) return false;
       if (filters.targetAudience && listing.targetAudience !== filters.targetAudience) return false;
+      if (filters.genderPreference && listing.genderPreference !== filters.genderPreference) return false;
       return true;
     });
   }, [filters, listings]);
@@ -55,7 +57,7 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.12 }}
         >
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
             <select className="field" value={filters.city} onChange={(event) => updateFilter('city', event.target.value)}>
               <option value="">Şehir</option>
               {cities.map((city) => (
@@ -85,6 +87,14 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
               {targetAudiences.map((audience) => (
                 <option key={audience} value={audience}>
                   {audience}
+                </option>
+              ))}
+            </select>
+            <select className="field" value={filters.genderPreference} onChange={(event) => updateFilter('genderPreference', event.target.value)}>
+              <option value="">Cinsiyet Tercihi</option>
+              {genderPreferences.map((preference) => (
+                <option key={preference} value={preference}>
+                  {preference}
                 </option>
               ))}
             </select>

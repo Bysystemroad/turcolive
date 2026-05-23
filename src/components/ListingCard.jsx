@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Camera, Home, MapPin, MessageCircle, UsersRound } from 'lucide-react';
+import { Camera, Home, MapPin, MessageCircle, UserRound, UsersRound } from 'lucide-react';
 
 function getWhatsappLink(contact) {
   const digits = String(contact || '').replace(/\D/g, '');
@@ -67,10 +67,14 @@ export default function ListingCard({ listing, onOpen }) {
             <p className="rounded-2xl bg-blush px-4 py-2 text-lg font-black text-turco ring-1 ring-turco/10">€{listing.rent}</p>
           </div>
         </button>
-        <div className="mt-5 grid gap-3 text-sm font-semibold text-navy/70 sm:grid-cols-4">
+        <div className="mt-5 grid gap-3 text-sm font-semibold text-navy/70 sm:grid-cols-5">
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.roomType}</span>
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.homeType}</span>
           <span className="rounded-2xl bg-porcelain px-3 py-2">{listing.targetAudience || 'Kimler için belirtilmedi'}</span>
+          <span className="flex items-center gap-2 rounded-2xl bg-porcelain px-3 py-2">
+            <UserRound size={16} />
+            {listing.genderPreference || 'Fark Etmez'}
+          </span>
           <span className="flex items-center gap-2 rounded-2xl bg-porcelain px-3 py-2">
             <UsersRound size={16} />
             {listing.peopleCount} kişi

@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Camera, Euro, Home, Mail, MapPin, ShieldCheck, UsersRound } from 'lucide-react';
+import { ArrowLeft, Camera, Euro, Home, Mail, MapPin, ShieldCheck, UserRound, UsersRound } from 'lucide-react';
 import { fadeUp, stagger } from '../motion.js';
 
 export default function ListingDetailPage({ listing, onBack, onNavigate }) {
@@ -99,6 +99,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
           <Badge icon={Camera}>{photoCount > 0 ? `${photoCount} fotoğraf` : 'Fotoğraf geçici'}</Badge>
           <Badge icon={ShieldCheck}>Topluluk ilanı</Badge>
           {listing.targetAudience && <Badge icon={UsersRound}>{listing.targetAudience}</Badge>}
+          {listing.genderPreference && <Badge icon={UserRound}>{listing.genderPreference}</Badge>}
         </motion.div>
 
         <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_22rem]">
@@ -110,10 +111,11 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
               {listing.city}, {listing.district}
             </motion.p>
 
-            <motion.div className="mt-8 grid gap-3 sm:grid-cols-4" variants={stagger}>
+            <motion.div className="mt-8 grid gap-3 sm:grid-cols-5" variants={stagger}>
               <InfoPill label="Oda tipi" value={listing.roomType} />
               <InfoPill label="Ev tipi" value={listing.homeType} />
               <InfoPill label="Kimler için?" value={listing.targetAudience || 'Belirtilmedi'} />
+              <InfoPill label="Cinsiyet tercihi" value={listing.genderPreference || 'Belirtilmedi'} />
               <InfoPill label="Kişi sayısı" value={`${listing.peopleCount} kişi`} />
             </motion.div>
 

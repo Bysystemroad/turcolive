@@ -12,6 +12,7 @@ const textFields = [
   'roomType',
   'homeType',
   'targetAudience',
+  'genderPreference',
   'peopleCount',
   'description',
   'contact',

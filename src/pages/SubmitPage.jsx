@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, ImagePlus, Info, UploadCloud } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
+import { cities, genderPreferences, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 import { fadeUp, stagger } from '../motion.js';
 
 const initialForm = {
@@ -14,6 +14,7 @@ const initialForm = {
   roomType: '',
   homeType: '',
   targetAudience: '',
+  genderPreference: '',
   peopleCount: '',
   description: '',
   contact: '',
@@ -30,6 +31,7 @@ const requiredMessages = {
   roomType: 'Oda tipi seçmelisiniz.',
   homeType: 'Ev tipi seçmelisiniz.',
   targetAudience: 'Kimler için alanını seçmelisiniz.',
+  genderPreference: 'Cinsiyet tercihi seçimi zorunludur.',
   peopleCount: 'Kaç kişi yaşıyor alanı zorunludur.',
   description: 'Açıklama alanı zorunludur.',
   contact: 'İletişim bilgisi alanı zorunludur.',
@@ -106,6 +108,7 @@ export default function SubmitPage({ onSubmit }) {
       roomType: form.roomType,
       homeType: form.homeType,
       targetAudience: form.targetAudience,
+      genderPreference: form.genderPreference,
       peopleCount: form.peopleCount,
       description: form.description.trim(),
       contact: form.contact.trim(),
@@ -226,6 +229,17 @@ export default function SubmitPage({ onSubmit }) {
                   {targetAudiences.map((audience) => (
                     <option key={audience} value={audience}>
                       {audience}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Cinsiyet Tercihi" error={errors.genderPreference}>
+                <select className={fieldClass('genderPreference')} required value={form.genderPreference} onChange={(event) => update('genderPreference', event.target.value)}>
+                  <option value="">Seç</option>
+                  {genderPreferences.map((preference) => (
+                    <option key={preference} value={preference}>
+                      {preference}
                     </option>
                   ))}
                 </select>

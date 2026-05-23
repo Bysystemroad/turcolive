@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Building2, MapPin, Search, UsersRound } from 'lucide-react';
-import { cities, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
+import { Building2, MapPin, Search, UserRound, UsersRound } from 'lucide-react';
+import { cities, genderPreferences, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 
 export default function SearchBar({ compact = false }) {
   return (
@@ -11,38 +11,45 @@ export default function SearchBar({ compact = false }) {
       viewport={{ once: true, margin: '-80px' }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
     >
-      <div className="grid gap-3 md:grid-cols-4 lg:grid-cols-[1.15fr_1fr_1fr_1fr_auto]">
-        <Filter icon={MapPin} label="Şehir">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_1fr_1fr_1fr_auto]">
+        <Filter icon={MapPin}>
           <option>Şehir</option>
           {cities.map((city) => (
             <option key={city}>{city}</option>
           ))}
         </Filter>
 
-        <Filter icon={Search} label="Oda Tipi">
+        <Filter icon={Search}>
           <option>Oda Tipi</option>
           {roomTypes.map((type) => (
             <option key={type}>{type}</option>
           ))}
         </Filter>
 
-        <Filter icon={Building2} label="Ev Tipi">
+        <Filter icon={Building2}>
           <option>Ev Tipi</option>
           {homeTypes.map((type) => (
             <option key={type}>{type}</option>
           ))}
         </Filter>
 
-        <Filter icon={UsersRound} label="Kimler için?">
+        <Filter icon={UsersRound}>
           <option>Kimler için?</option>
           {targetAudiences.map((audience) => (
             <option key={audience}>{audience}</option>
           ))}
         </Filter>
 
+        <Filter icon={UserRound}>
+          <option>Cinsiyet Tercihi</option>
+          {genderPreferences.map((preference) => (
+            <option key={preference}>{preference}</option>
+          ))}
+        </Filter>
+
         {!compact && (
           <motion.button
-            className="premium-button md:col-span-4 lg:col-span-1"
+            className="premium-button md:col-span-2 xl:col-span-1"
             whileHover={{ scale: 1.03, y: -2 }}
             whileTap={{ scale: 0.97 }}
           >
