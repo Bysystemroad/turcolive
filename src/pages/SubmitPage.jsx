@@ -18,6 +18,7 @@ const initialForm = {
   peopleCount: '',
   description: '',
   contact: '',
+  phoneNumber: '',
   imageFiles: [],
 };
 
@@ -35,6 +36,7 @@ const requiredMessages = {
   peopleCount: 'Kaç kişi yaşıyor alanı zorunludur.',
   description: 'Açıklama alanı zorunludur.',
   contact: 'İletişim bilgisi alanı zorunludur.',
+  phoneNumber: 'Telefon / WhatsApp numarası zorunludur.',
   imageFiles: 'En az 4 fotoğraf yüklemelisiniz.',
 };
 
@@ -112,6 +114,7 @@ export default function SubmitPage({ onSubmit }) {
       peopleCount: form.peopleCount,
       description: form.description.trim(),
       contact: form.contact.trim(),
+      phoneNumber: form.phoneNumber.trim(),
       imageFileNames: form.imageFiles.map((file) => file.name),
       imageUrls: submittedImageUrls,
     });
@@ -247,6 +250,16 @@ export default function SubmitPage({ onSubmit }) {
 
               <Field label="Kaç kişi yaşıyor" error={errors.peopleCount}>
                 <input className={fieldClass('peopleCount')} required min="0" type="number" value={form.peopleCount} onChange={(event) => update('peopleCount', event.target.value)} />
+              </Field>
+
+              <Field label="Telefon / WhatsApp Numarası" error={errors.phoneNumber}>
+                <input
+                  className={fieldClass('phoneNumber')}
+                  required
+                  placeholder="Örn: +39 333 123 4567"
+                  value={form.phoneNumber}
+                  onChange={(event) => update('phoneNumber', event.target.value)}
+                />
               </Field>
 
               <Field label="Açıklama" error={errors.description} className="sm:col-span-2">

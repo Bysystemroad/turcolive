@@ -16,6 +16,7 @@ const textFields = [
   'peopleCount',
   'description',
   'contact',
+  'phoneNumber',
   'imageFileNames',
 ];
 

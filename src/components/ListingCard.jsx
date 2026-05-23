@@ -1,16 +1,39 @@
 import { motion } from 'framer-motion';
-import { Camera, Home, MapPin, MessageCircle, UserRound, UsersRound } from 'lucide-react';
+import { Camera, Home, MapPin, MessageCircle, Phone, UserRound, UsersRound } from 'lucide-react';
+import { useState } from 'react';
 
-function getWhatsappLink(contact) {
-  const digits = String(contact || '').replace(/\D/g, '');
-  return digits.length >= 10 ? `https://wa.me/${digits}` : '';
+const defaultWhatsappMessage = 'Merhaba, TurcoLive’daki ilanınız hakkında bilgi almak istiyorum.';
+
+function cleanPhoneNumber(phoneNumber) {
+  return String(phoneNumber || '').replace(/\D/g, '');
+}
+
+function getPhoneSource(listing) {
+  const explicitPhone = String(listing.phoneNumber || '').trim();
+  if (cleanPhoneNumber(explicitPhone).length >= 10) return explicitPhone;
+
+  const contact = String(listing.contact || '').trim();
+  if (cleanPhoneNumber(contact).length >= 10) return contact;
+
+  return '';
+}
+
+function getWhatsappLink(phoneNumber) {
+  const cleanedPhoneNumber = cleanPhoneNumber(phoneNumber);
+  if (cleanedPhoneNumber.length < 10) return '';
+
+  return `https://wa.me/${cleanedPhoneNumber}?text=${encodeURIComponent(defaultWhatsappMessage)}`;
 }
 
 export default function ListingCard({ listing, onOpen }) {
+  const [phoneVisible, setPhoneVisible] = useState(false);
   const imageUrls = listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
   const hasImagePreview = imageUrls.length > 0;
   const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
-  const whatsappLink = getWhatsappLink(listing.contact);
+  const phoneNumber = getPhoneSource(listing);
+  const whatsappLink = getWhatsappLink(phoneNumber);
+  const hasPhoneNumber = Boolean(whatsappLink);
+  const telLink = phoneNumber ? `tel:${phoneNumber.replace(/\s/g, '')}` : '';
 
   return (
     <motion.article
@@ -81,41 +104,44 @@ export default function ListingCard({ listing, onOpen }) {
           </span>
         </div>
         <p className="mt-5 line-clamp-3 text-sm leading-6 text-navy/65">{listing.description}</p>
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <motion.button
-            type="button"
-            onClick={() => onOpen(listing.id)}
-            className="flex-1 rounded-full bg-navy px-5 py-3 text-sm font-black text-white transition hover:bg-ink"
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-          >
-            İlanı İncele
-          </motion.button>
-          {whatsappLink ? (
+
+        {hasPhoneNumber && (
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <motion.a
               href={whatsappLink}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-[#20B15A] px-5 py-3 text-sm font-black text-white shadow-sm"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-[#20B15A] px-5 py-3 text-sm font-black text-white shadow-sm"
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.97 }}
             >
               <MessageCircle size={17} />
-              WhatsApp
+              WhatsApp ile Yaz
             </motion.a>
-          ) : (
-            <motion.button
-              type="button"
-              onClick={() => onOpen(listing.id)}
-              className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-porcelain px-5 py-3 text-sm font-black text-navy transition hover:bg-blush hover:text-turco"
-              whileHover={{ scale: 1.03, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-            >
-              <MessageCircle size={17} />
-              İletişim
-            </motion.button>
-          )}
-        </div>
+            {phoneVisible ? (
+              <motion.a
+                href={telLink}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-porcelain px-5 py-3 text-sm font-black text-navy ring-1 ring-navy/10 transition hover:bg-blush hover:text-turco"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Phone size={17} />
+                Telefon: {phoneNumber}
+              </motion.a>
+            ) : (
+              <motion.button
+                type="button"
+                onClick={() => setPhoneVisible(true)}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-porcelain px-5 py-3 text-sm font-black text-navy ring-1 ring-navy/10 transition hover:bg-blush hover:text-turco"
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Phone size={17} />
+                Telefonu Göster
+              </motion.button>
+            )}
+          </div>
+        )}
       </div>
     </motion.article>
   );
