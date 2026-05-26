@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import EmptyState from '../components/EmptyState.jsx';
 import ListingCard from '../components/ListingCard.jsx';
@@ -13,7 +14,7 @@ const defaultFilters = {
   genderPreference: '',
 };
 
-export default function ListingsPage({ listings, loading = false, onNavigate, onOpenListing }) {
+export default function ListingsPage({ listings, loading = false, error = '', onRetry, onNavigate, onOpenListing }) {
   const [filters, setFilters] = useState(defaultFilters);
 
   const filteredListings = useMemo(() => {
@@ -110,6 +111,27 @@ export default function ListingsPage({ listings, loading = false, onNavigate, on
             >
               <h2 className="text-2xl font-black text-navy">İlanlar yükleniyor.</h2>
               <p className="mt-3 text-navy/65">Supabase verileri alınıyor, kısa bir an.</p>
+            </motion.div>
+          ) : error ? (
+            <motion.div
+              className="rounded-[2rem] border border-turco/15 bg-white p-10 text-center shadow-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h2 className="text-2xl font-black text-navy">İlanlar yüklenemedi.</h2>
+              <p className="mx-auto mt-3 max-w-2xl text-navy/65">{error}</p>
+              {onRetry && (
+                <motion.button
+                  type="button"
+                  onClick={onRetry}
+                  className="mt-7 inline-flex items-center justify-center gap-2 rounded-full bg-blush px-6 py-3 text-sm font-black text-turco ring-1 ring-turco/10"
+                  whileHover={{ scale: 1.03, y: -2 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  <RefreshCw size={17} />
+                  Tekrar Dene
+                </motion.button>
+              )}
             </motion.div>
           ) : listings.length === 0 ? (
             <EmptyState onNavigate={onNavigate} />

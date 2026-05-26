@@ -25,17 +25,19 @@ export default function App() {
   const [page, setPage] = useState(getInitialPage);
   const [listings, setListings] = useState([]);
   const [storageMessage, setStorageMessage] = useState('');
+  const [listingsError, setListingsError] = useState('');
   const [loadingListings, setLoadingListings] = useState(true);
   const [selectedListingId, setSelectedListingId] = useState(getListingIdFromHash);
 
   const loadSupabaseListings = async () => {
     setLoadingListings(true);
+    setListingsError('');
     try {
       const data = await fetchListings();
       setListings(data);
       setStorageMessage('');
     } catch (error) {
-      setStorageMessage(error.message || 'İlanlar Supabase üzerinden yüklenemedi.');
+      setListingsError(error.message || 'İlanlar Supabase üzerinden yüklenemedi.');
     } finally {
       setLoadingListings(false);
     }
@@ -80,6 +82,8 @@ export default function App() {
         <ListingsPage
           listings={listings}
           loading={loadingListings}
+          error={listingsError}
+          onRetry={loadSupabaseListings}
           onNavigate={goTo}
           onOpenListing={openListing}
         />
@@ -106,7 +110,7 @@ export default function App() {
     }
 
     return <HomePage onNavigate={goTo} />;
-  }, [page, listings, selectedListingId, loadingListings, storageMessage]);
+  }, [page, listings, selectedListingId, loadingListings, listingsError, storageMessage]);
 
   return (
     <div className="min-h-screen bg-cream text-navy">
