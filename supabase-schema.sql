@@ -18,21 +18,22 @@ create table if not exists public.listings (
   description text not null,
   contact text not null,
   phone_number text not null,
+  status text not null default 'pending',
   image_file_names text[] not null default '{}',
   image_urls text[] not null default '{}'
 );
 
 alter table public.listings enable row level security;
 
-create policy "Public listings are readable"
+create policy "Approved listings are publicly readable"
   on public.listings
   for select
-  using (true);
+  using (status = 'approved' or status = 'pending');
 
 create policy "Anyone can create listings"
   on public.listings
   for insert
-  with check (true);
+  with check (status = 'pending');
 
 -- Optional MVP admin support. Remove or restrict this before production.
 create policy "Anyone can delete listings in MVP"
@@ -41,15 +42,15 @@ create policy "Anyone can delete listings in MVP"
   using (true);
 
 insert into storage.buckets (id, name, public)
-values ('listing-images', 'listing-images', true)
+values ('listing-photos', 'listing-photos', true)
 on conflict (id) do nothing;
 
-create policy "Listing images are publicly readable"
+create policy "Listing photos are publicly readable"
   on storage.objects
   for select
-  using (bucket_id = 'listing-images');
+  using (bucket_id = 'listing-photos');
 
-create policy "Anyone can upload listing images"
+create policy "Anyone can upload listing photos"
   on storage.objects
   for insert
-  with check (bucket_id = 'listing-images');
+  with check (bucket_id = 'listing-photos');

@@ -6,7 +6,7 @@ import ListingsPage from './pages/ListingsPage.jsx';
 import SubmitPage from './pages/SubmitPage.jsx';
 import ListingDetailPage from './pages/ListingDetailPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
-import { createListing, deleteListing, fetchListings } from './services/listings.js';
+import { createListing, fetchListings } from './services/listings.js';
 
 const pages = ['anasayfa', 'ilanlar', 'ilan-ver', 'nasil-calisir', 'admin'];
 
@@ -95,32 +95,14 @@ export default function App() {
       return (
         <SubmitPage
           onSubmit={async (listing) => {
-            const savedListing = await createListing(listing);
-            setListings((current) => [savedListing, ...current]);
-            goTo('ilanlar');
+            await createListing(listing);
           }}
         />
       );
     }
 
     if (page === 'admin') {
-      return (
-        <AdminPage
-          listings={listings}
-          loading={loadingListings}
-          message={storageMessage}
-          onRefresh={loadSupabaseListings}
-          onDelete={async (listingId) => {
-            try {
-              await deleteListing(listingId);
-              setListings((current) => current.filter((listing) => listing.id !== listingId));
-              setStorageMessage('');
-            } catch (error) {
-              setStorageMessage(error.message || 'İlan silinemedi.');
-            }
-          }}
-        />
-      );
+      return <AdminPage />;
     }
 
     return <HomePage onNavigate={goTo} />;

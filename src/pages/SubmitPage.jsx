@@ -73,6 +73,7 @@ export default function SubmitPage({ onSubmit }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const imagePreviews = useObjectUrls(form.imageFiles);
@@ -80,6 +81,7 @@ export default function SubmitPage({ onSubmit }) {
   const update = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
     setSubmitError('');
+    setSuccessMessage('');
     setErrors((current) => {
       if (!current[key]) return current;
       const next = { ...current };
@@ -98,6 +100,8 @@ export default function SubmitPage({ onSubmit }) {
     }
 
     setSubmitting(true);
+    setSubmitError('');
+    setSuccessMessage('');
 
     try {
       await onSubmit({
@@ -118,10 +122,12 @@ export default function SubmitPage({ onSubmit }) {
         contact: form.contact.trim(),
         phoneNumber: form.phoneNumber.trim(),
         imageFiles: form.imageFiles,
-        imageFileNames: form.imageFiles.map((file) => file.name),
       });
+      setForm(initialForm);
+      setSuccessMessage('İlanınız gönderildi. Onaylandıktan sonra yayınlanacaktır.');
     } catch (error) {
       setSubmitError(error.message || 'İlan Supabase üzerine kaydedilemedi.');
+    } finally {
       setSubmitting(false);
     }
   };
@@ -151,8 +157,8 @@ export default function SubmitPage({ onSubmit }) {
             <div className="mt-8 space-y-4 text-sm leading-6 text-white/78">
               {[
                 'TurcoLive ödeme veya rezervasyon platformu değildir.',
-                'İlanlara istediğin kadar fotoğraf ekleyebilirsin.',
-                'Kimler için uygun olduğunu açıkça belirtebilirsin.',
+                'Fotoğraflar Supabase Storage üzerinde saklanır.',
+                'İlanlar onaylandıktan sonra yayına alınır.',
               ].map((text) => (
                 <p key={text} className="flex gap-3">
                   <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
@@ -304,19 +310,29 @@ export default function SubmitPage({ onSubmit }) {
               </motion.p>
             )}
 
+            {successMessage && (
+              <motion.p
+                className="mt-5 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-extrabold text-emerald-700 ring-1 ring-emerald-200"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {successMessage}
+              </motion.p>
+            )}
+
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-navy/55">
-                Gönderilen metin bilgileri tarayıcıda saklanır; fotoğraflar sayfa yenilenince kalıcı olmaz.
+                Gönderilen fotoğraflar Supabase Storage üzerinde saklanır; ilan onaydan sonra yayınlanır.
               </p>
               <motion.button
                 type="submit"
                 disabled={submitting}
                 className="premium-button disabled:cursor-not-allowed disabled:opacity-60"
-                whileHover={{ scale: 1.04, y: -3 }}
-                whileTap={{ scale: 0.97 }}
+                whileHover={{ scale: submitting ? 1 : 1.04, y: submitting ? 0 : -3 }}
+                whileTap={{ scale: submitting ? 1 : 0.97 }}
               >
                 <UploadCloud size={19} />
-                {submitting ? 'Kaydediliyor' : 'İlanı Gönder'}
+                {submitting ? 'Fotoğraflar yükleniyor' : 'İlanı Gönder'}
               </motion.button>
             </div>
           </motion.form>

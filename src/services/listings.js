@@ -1,7 +1,7 @@
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.js';
 
 const LISTINGS_TABLE = 'listings';
-const LISTING_IMAGES_BUCKET = 'listing-images';
+const LISTING_PHOTOS_BUCKET = 'listing-photos';
 
 function assertSupabaseConfigured() {
   if (!isSupabaseConfigured || !supabase) {
@@ -27,6 +27,7 @@ function toDbListing(listing) {
     description: listing.description,
     contact: listing.contact,
     phone_number: listing.phoneNumber,
+    status: listing.status || 'pending',
     image_file_names: listing.imageFileNames || [],
     image_urls: listing.imageUrls || [],
   };
@@ -50,6 +51,7 @@ function fromDbListing(listing) {
     description: listing.description,
     contact: listing.contact,
     phoneNumber: listing.phone_number,
+    status: listing.status || 'pending',
     imageFileNames: listing.image_file_names || [],
     imageUrls: listing.image_urls || [],
   };
@@ -64,7 +66,7 @@ function sanitizeFileName(fileName) {
     .toLowerCase();
 }
 
-export async function uploadListingImages(listingId, imageFiles = []) {
+export async function uploadListingPhotos(listingId, imageFiles = []) {
   assertSupabaseConfigured();
 
   const uploadedImages = [];
@@ -73,7 +75,7 @@ export async function uploadListingImages(listingId, imageFiles = []) {
     const fileName = `${Date.now()}-${index + 1}-${sanitizeFileName(file.name)}`;
     const filePath = `${listingId}/${fileName}`;
 
-    const { error } = await supabase.storage.from(LISTING_IMAGES_BUCKET).upload(filePath, file, {
+    const { error } = await supabase.storage.from(LISTING_PHOTOS_BUCKET).upload(filePath, file, {
       cacheControl: '3600',
       upsert: false,
     });
@@ -82,7 +84,7 @@ export async function uploadListingImages(listingId, imageFiles = []) {
       throw new Error(`Fotoğraf yüklenemedi: ${error.message}`);
     }
 
-    const { data } = supabase.storage.from(LISTING_IMAGES_BUCKET).getPublicUrl(filePath);
+    const { data } = supabase.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(filePath);
     uploadedImages.push({
       fileName: file.name,
       url: data.publicUrl,
@@ -93,13 +95,16 @@ export async function uploadListingImages(listingId, imageFiles = []) {
   return uploadedImages;
 }
 
-export async function fetchListings() {
+export async function fetchListings({ includePending = false } = {}) {
   assertSupabaseConfigured();
 
-  const { data, error } = await supabase
-    .from(LISTINGS_TABLE)
-    .select('*')
-    .order('created_at', { ascending: false });
+  let query = supabase.from(LISTINGS_TABLE).select('*').order('created_at', { ascending: false });
+
+  if (!includePending) {
+    query = query.eq('status', 'approved');
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     throw new Error(`İlanlar yüklenemedi: ${error.message}`);
@@ -113,7 +118,7 @@ export async function createListing(listing) {
 
   const id = listing.id || crypto.randomUUID();
   const createdAt = listing.createdAt || new Date().toISOString();
-  const uploadedImages = await uploadListingImages(id, listing.imageFiles || []);
+  const uploadedImages = await uploadListingPhotos(id, listing.imageFiles || []);
   const imageFileNames = uploadedImages.map((image) => image.fileName);
   const imageUrls = uploadedImages.map((image) => image.url);
 
@@ -121,15 +126,12 @@ export async function createListing(listing) {
     ...listing,
     id,
     createdAt,
+    status: 'pending',
     imageFileNames,
     imageUrls,
   });
 
-  const { data, error } = await supabase
-    .from(LISTINGS_TABLE)
-    .insert(dbListing)
-    .select('*')
-    .single();
+  const { data, error } = await supabase.from(LISTINGS_TABLE).insert(dbListing).select('*').single();
 
   if (error) {
     throw new Error(`İlan kaydedilemedi: ${error.message}`);
