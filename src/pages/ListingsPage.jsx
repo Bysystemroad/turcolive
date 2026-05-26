@@ -13,7 +13,7 @@ const defaultFilters = {
   genderPreference: '',
 };
 
-export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
+export default function ListingsPage({ listings, loading = false, onNavigate, onOpenListing }) {
   const [filters, setFilters] = useState(defaultFilters);
 
   const filteredListings = useMemo(() => {
@@ -102,7 +102,16 @@ export default function ListingsPage({ listings, onNavigate, onOpenListing }) {
         </motion.div>
 
         <div className="mt-8">
-          {listings.length === 0 ? (
+          {loading ? (
+            <motion.div
+              className="rounded-[2rem] border border-navy/10 bg-white p-10 text-center shadow-card"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <h2 className="text-2xl font-black text-navy">İlanlar yükleniyor.</h2>
+              <p className="mt-3 text-navy/65">Supabase verileri alınıyor, kısa bir an.</p>
+            </motion.div>
+          ) : listings.length === 0 ? (
             <EmptyState onNavigate={onNavigate} />
           ) : filteredListings.length === 0 ? (
             <motion.div

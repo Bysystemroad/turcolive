@@ -72,12 +72,14 @@ function validateForm(form) {
 export default function SubmitPage({ onSubmit }) {
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const imagePreviews = useObjectUrls(form.imageFiles);
 
   const update = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+    setSubmitError('');
     setErrors((current) => {
       if (!current[key]) return current;
       const next = { ...current };
@@ -86,7 +88,7 @@ export default function SubmitPage({ onSubmit }) {
     });
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
     const nextErrors = validateForm(form);
@@ -96,30 +98,32 @@ export default function SubmitPage({ onSubmit }) {
     }
 
     setSubmitting(true);
-    const submittedImageUrls = form.imageFiles.map((file) => URL.createObjectURL(file));
 
-    onSubmit({
-      id: crypto.randomUUID(),
-      createdAt: new Date().toISOString(),
-      fullName: form.fullName.trim(),
-      title: form.title.trim(),
-      city: form.city,
-      district: form.district.trim(),
-      rent: form.rent,
-      deposit: form.deposit,
-      roomType: form.roomType,
-      homeType: form.homeType,
-      targetAudience: form.targetAudience,
-      genderPreference: form.genderPreference,
-      peopleCount: form.peopleCount,
-      description: form.description.trim(),
-      contact: form.contact.trim(),
-      phoneNumber: form.phoneNumber.trim(),
-      imageFileNames: form.imageFiles.map((file) => file.name),
-      imageUrls: submittedImageUrls,
-    });
-
-    setSubmitting(false);
+    try {
+      await onSubmit({
+        id: crypto.randomUUID(),
+        createdAt: new Date().toISOString(),
+        fullName: form.fullName.trim(),
+        title: form.title.trim(),
+        city: form.city,
+        district: form.district.trim(),
+        rent: form.rent,
+        deposit: form.deposit,
+        roomType: form.roomType,
+        homeType: form.homeType,
+        targetAudience: form.targetAudience,
+        genderPreference: form.genderPreference,
+        peopleCount: form.peopleCount,
+        description: form.description.trim(),
+        contact: form.contact.trim(),
+        phoneNumber: form.phoneNumber.trim(),
+        imageFiles: form.imageFiles,
+        imageFileNames: form.imageFiles.map((file) => file.name),
+      });
+    } catch (error) {
+      setSubmitError(error.message || 'İlan Supabase üzerine kaydedilemedi.');
+      setSubmitting(false);
+    }
   };
 
   const fieldClass = (field) => `field ${errors[field] ? 'border-turco ring-2 ring-turco/20' : ''}`;
@@ -289,6 +293,16 @@ export default function SubmitPage({ onSubmit }) {
                 />
               </motion.div>
             </motion.div>
+
+            {submitError && (
+              <motion.p
+                className="mt-5 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+              >
+                {submitError}
+              </motion.p>
+            )}
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-navy/55">

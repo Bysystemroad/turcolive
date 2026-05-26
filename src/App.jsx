@@ -5,9 +5,10 @@ import HomePage from './pages/HomePage.jsx';
 import ListingsPage from './pages/ListingsPage.jsx';
 import SubmitPage from './pages/SubmitPage.jsx';
 import ListingDetailPage from './pages/ListingDetailPage.jsx';
-import { loadListings, saveListings } from './storage.js';
+import AdminPage from './pages/AdminPage.jsx';
+import { createListing, deleteListing, fetchListings } from './services/listings.js';
 
-const pages = ['anasayfa', 'ilanlar', 'ilan-ver', 'nasil-calisir'];
+const pages = ['anasayfa', 'ilanlar', 'ilan-ver', 'nasil-calisir', 'admin'];
 
 function getInitialPage() {
   const hash = window.location.hash.replace('#', '');
@@ -22,18 +23,30 @@ function getListingIdFromHash() {
 
 export default function App() {
   const [page, setPage] = useState(getInitialPage);
-  const [listings, setListings] = useState(loadListings);
+  const [listings, setListings] = useState([]);
   const [storageMessage, setStorageMessage] = useState('');
+  const [loadingListings, setLoadingListings] = useState(true);
   const [selectedListingId, setSelectedListingId] = useState(getListingIdFromHash);
+
+  const loadSupabaseListings = async () => {
+    setLoadingListings(true);
+    try {
+      const data = await fetchListings();
+      setListings(data);
+      setStorageMessage('');
+    } catch (error) {
+      setStorageMessage(error.message || 'İlanlar Supabase üzerinden yüklenemedi.');
+    } finally {
+      setLoadingListings(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSupabaseListings();
+  }, []);
 
   useEffect(() => {
     const handleHash = () => {
-      if (window.location.hash === '#ilanlari-temizle') {
-        localStorage.removeItem('turcolive_listings');
-        setListings([]);
-        window.location.hash = 'ilanlar';
-        return;
-      }
       setSelectedListingId(getListingIdFromHash());
       setPage(getInitialPage());
     };
@@ -41,15 +54,6 @@ export default function App() {
     handleHash();
     return () => window.removeEventListener('hashchange', handleHash);
   }, []);
-
-  useEffect(() => {
-    const result = saveListings(listings);
-    if (!result.ok) {
-      setStorageMessage(result.message);
-      return;
-    }
-    setStorageMessage('');
-  }, [listings]);
 
   const goTo = (nextPage) => {
     window.location.hash = nextPage;
@@ -72,7 +76,14 @@ export default function App() {
 
   const content = useMemo(() => {
     if (page === 'ilanlar') {
-      return <ListingsPage listings={listings} onNavigate={goTo} onOpenListing={openListing} />;
+      return (
+        <ListingsPage
+          listings={listings}
+          loading={loadingListings}
+          onNavigate={goTo}
+          onOpenListing={openListing}
+        />
+      );
     }
 
     if (page === 'ilan-detay') {
@@ -83,16 +94,37 @@ export default function App() {
     if (page === 'ilan-ver') {
       return (
         <SubmitPage
-          onSubmit={(listing) => {
-            setListings((current) => [listing, ...current]);
+          onSubmit={async (listing) => {
+            const savedListing = await createListing(listing);
+            setListings((current) => [savedListing, ...current]);
             goTo('ilanlar');
           }}
         />
       );
     }
 
+    if (page === 'admin') {
+      return (
+        <AdminPage
+          listings={listings}
+          loading={loadingListings}
+          message={storageMessage}
+          onRefresh={loadSupabaseListings}
+          onDelete={async (listingId) => {
+            try {
+              await deleteListing(listingId);
+              setListings((current) => current.filter((listing) => listing.id !== listingId));
+              setStorageMessage('');
+            } catch (error) {
+              setStorageMessage(error.message || 'İlan silinemedi.');
+            }
+          }}
+        />
+      );
+    }
+
     return <HomePage onNavigate={goTo} />;
-  }, [page, listings, selectedListingId]);
+  }, [page, listings, selectedListingId, loadingListings, storageMessage]);
 
   return (
     <div className="min-h-screen bg-cream text-navy">
