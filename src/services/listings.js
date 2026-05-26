@@ -140,6 +140,28 @@ export async function createListing(listing) {
   return fromDbListing(data);
 }
 
+export async function updateListingStatus(listingId, status) {
+  assertSupabaseConfigured();
+
+  const allowedStatuses = ['pending', 'approved', 'rejected', 'spam'];
+  if (!allowedStatuses.includes(status)) {
+    throw new Error('Geçersiz ilan durumu.');
+  }
+
+  const { data, error } = await supabase
+    .from(LISTINGS_TABLE)
+    .update({ status })
+    .eq('id', listingId)
+    .select('*')
+    .single();
+
+  if (error) {
+    throw new Error(`İlan durumu güncellenemedi: ${error.message}`);
+  }
+
+  return fromDbListing(data);
+}
+
 export async function deleteListing(listingId) {
   assertSupabaseConfigured();
 

@@ -28,15 +28,28 @@ alter table public.listings enable row level security;
 create policy "Approved listings are publicly readable"
   on public.listings
   for select
-  using (status = 'approved' or status = 'pending');
+  using (status = 'approved');
 
-create policy "Anyone can create listings"
+-- Optional MVP admin support. Remove or restrict this before production.
+create policy "Temporary admin can read all listings in MVP"
+  on public.listings
+  for select
+  using (true);
+
+create policy "Anyone can create pending listings"
   on public.listings
   for insert
   with check (status = 'pending');
 
 -- Optional MVP admin support. Remove or restrict this before production.
-create policy "Anyone can delete listings in MVP"
+create policy "Temporary admin can update listing status in MVP"
+  on public.listings
+  for update
+  using (true)
+  with check (status in ('pending', 'approved', 'rejected', 'spam'));
+
+-- Optional MVP admin support. Remove or restrict this before production.
+create policy "Temporary admin can delete listings in MVP"
   on public.listings
   for delete
   using (true);
