@@ -55,6 +55,18 @@
     <priority>0.85</priority>
   </url>
   <url>
+    <loc>https://turcolive.vercel.app/napoli-turk-oda-ilanlari</loc>
+    <lastmod>2026-05-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://turcolive.vercel.app/venezia-turk-ev-arkadasi</loc>
+    <lastmod>2026-05-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
     <loc>https://turcolive.vercel.app/hakkimizda</loc>
     <lastmod>2026-05-27</lastmod>
     <changefreq>monthly</changefreq>

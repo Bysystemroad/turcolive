@@ -68,13 +68,33 @@ export const citySeoPages = {
   },
   '/firenze-turk-oda-ilanlari': {
     pageId: 'firenze-turk-oda-ilanlari',
-    city: 'Floransa',
+    city: 'Firenze',
     title: 'Firenze Türk Oda İlanları | TurcoLive',
     description:
-      'Firenze ve Floransa’da yaşayan Türkler için oda ve ev arkadaşı ilanları. TurcoLive ile Türk topluluğuna uygun ev bul.',
+      'Firenze’de yaşayan Türkler için oda ve ev arkadaşı ilanları. TurcoLive ile Firenze’de Türk topluluğuna uygun ev bul.',
     heading: 'Firenze Türk oda ilanları',
-    intro: 'Floransa’da Türklerle aynı evi paylaşmak isteyenler için oda ve ev arkadaşı ilanlarını keşfet.',
+    intro: 'Firenze’de Türklerle aynı evi paylaşmak isteyenler için oda ve ev arkadaşı ilanlarını keşfet.',
     path: '/firenze-turk-oda-ilanlari',
+  },
+  '/napoli-turk-oda-ilanlari': {
+    pageId: 'napoli-turk-oda-ilanlari',
+    city: 'Napoli',
+    title: 'Napoli Türk Oda İlanları | TurcoLive',
+    description:
+      'Napoli’de yaşayan Türkler için oda, ev ve ev arkadaşı ilanlarını keşfet. TurcoLive ile Napoli’de güvenilir ev paylaşımı bul.',
+    heading: 'Napoli Türk oda ilanları',
+    intro: 'Napoli’de yaşayan Türkler için oda ve ev arkadaşı ilanlarını topluluk odaklı bir deneyimle keşfet.',
+    path: '/napoli-turk-oda-ilanlari',
+  },
+  '/venezia-turk-ev-arkadasi': {
+    pageId: 'venezia-turk-ev-arkadasi',
+    city: 'Venezia',
+    title: 'Venezia Türk Ev Arkadaşı | TurcoLive',
+    description:
+      'Venezia’da Türk ev arkadaşı ve oda ilanları. TurcoLive ile İtalya’daki Türk topluluğuna uygun ev paylaşımı bul.',
+    heading: 'Venezia Türk ev arkadaşı ilanları',
+    intro: 'Venezia’da Türk ev arkadaşı arayanlar için oda ve ev ilanlarını sade ve güvenilir şekilde incele.',
+    path: '/venezia-turk-ev-arkadasi',
   },
 };
 

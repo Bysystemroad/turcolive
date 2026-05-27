@@ -2,6 +2,10 @@ import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.js';
 
 const LISTINGS_TABLE = 'listings';
 const LISTING_PHOTOS_BUCKET = 'listing-photos';
+const CITY_ALIASES = {
+  Floransa: 'Firenze',
+  Venedik: 'Venezia',
+};
 
 function assertSupabaseConfigured() {
   if (!isSupabaseConfigured || !supabase) {
@@ -39,7 +43,7 @@ function fromDbListing(listing) {
     createdAt: listing.created_at,
     fullName: listing.full_name,
     title: listing.title,
-    city: listing.city,
+    city: CITY_ALIASES[listing.city] || listing.city,
     district: listing.district,
     rent: listing.rent,
     deposit: listing.deposit,

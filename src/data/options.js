@@ -1,4 +1,4 @@
-export const cities = ['Milano', 'Roma', 'Torino', 'Bologna', 'Floransa', 'Napoli', 'Venedik', 'Padova', 'Ancona'];
+export const cities = ['Roma', 'Milano', 'Bologna', 'Torino', 'Firenze', 'Padova', 'Napoli', 'Venezia', 'Ancona'];
 
 export const roomTypes = ['Tek kişilik oda', 'Çift kişilik oda'];
 
