@@ -58,7 +58,9 @@ export default function ListingCard({ listing, onOpen }) {
               <motion.img
                 className="h-full w-full object-cover"
                 src={imageUrls[0]}
-                alt={listing.title}
+                alt={`${listing.title} - ${listing.city} oda fotoğrafı`}
+                loading="lazy"
+                decoding="async"
                 whileHover={{ scale: 1.06 }}
                 transition={{ duration: 0.5 }}
               />

@@ -66,6 +66,8 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
                   className="h-80 w-full object-contain sm:h-[30rem] lg:h-[34rem]"
                   src={imageUrls[0]}
                   alt={`${listing.title} fotoğraf 1`}
+                  loading="lazy"
+                  decoding="async"
                   whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.35 }}
                 />
@@ -96,6 +98,8 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
                     className="h-full w-full object-cover"
                     src={image}
                     alt={`${listing.title} küçük fotoğraf ${index + 1}`}
+                    loading="lazy"
+                    decoding="async"
                   />
                 </motion.button>
               ))}

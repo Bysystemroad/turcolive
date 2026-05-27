@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
 
 const footerLinks = [
-  { label: 'Hakkımızda', href: '#hakkimizda' },
-  { label: 'Gizlilik Politikası', href: '#gizlilik-politikasi' },
-  { label: 'Kullanım Şartları', href: '#kullanim-sartlari' },
-  { label: 'İletişim', href: '#iletisim' },
+  { label: 'Hakkımızda', href: '/hakkimizda' },
+  { label: 'Gizlilik Politikası', href: '/gizlilik-politikasi' },
+  { label: 'Kullanım Şartları', href: '/kullanim-sartlari' },
+  { label: 'İletişim', href: '/iletisim' },
 ];
 
 export default function Footer() {
@@ -20,7 +20,13 @@ export default function Footer() {
         <div>
           <div className="flex items-center gap-3">
             <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-navy/10">
-              <img className="h-11 w-11 object-contain" src="/brand/turcolive-logo-cropped.png" alt="TurcoLive logosu" />
+              <img
+                className="h-11 w-11 object-contain"
+                src="/brand/turcolive-logo-cropped.png"
+                alt="TurcoLive logosu"
+                loading="lazy"
+                decoding="async"
+              />
             </span>
             <p className="text-xl font-black text-navy">
               Turco<span className="text-turco">Live</span>
