@@ -1,30 +1,35 @@
 import { motion } from 'framer-motion';
 
+const footerLinks = [
+  { label: 'Hakkımızda', href: '#hakkimizda' },
+  { label: 'Gizlilik Politikası', href: '#gizlilik-politikasi' },
+  { label: 'Kullanım Şartları', href: '#kullanim-sartlari' },
+  { label: 'İletişim', href: '#iletisim' },
+];
+
 export default function Footer() {
   return (
     <footer className="border-t border-navy/10 bg-white">
       <motion.div
-        className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-9 text-sm text-navy/62 sm:px-6 md:flex-row md:items-center md:justify-between lg:px-8"
+        className="mx-auto grid max-w-7xl gap-10 px-4 py-12 text-sm text-navy/62 sm:px-6 lg:grid-cols-[1.2fr_1fr] lg:px-8"
         initial={{ opacity: 0, y: 18 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.5 }}
       >
-        <div className="flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-navy/10">
-            <img className="h-10 w-10 object-contain" src="/brand/turcolive-logo-cropped.png" alt="" />
-          </span>
-          <p className="text-lg font-black text-navy">
-            Turco<span className="text-turco">Live</span>
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4 md:items-end">
-          <div className="space-y-1 md:text-right">
-            <p>TurcoLive — İtalya’daki Türkler için ev ve oda paylaşım platformu.</p>
-            <p>© 2026 TurcoLive - Tüm hakları saklıdır.</p>
-          </div>
+        <div>
           <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 place-items-center overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-navy/10">
+              <img className="h-11 w-11 object-contain" src="/brand/turcolive-logo-cropped.png" alt="TurcoLive logosu" />
+            </span>
+            <p className="text-xl font-black text-navy">
+              Turco<span className="text-turco">Live</span>
+            </p>
+          </div>
+          <p className="mt-5 max-w-md text-base leading-7 text-navy/62">
+            İtalya’daki Türkler için ev ve oda paylaşım platformu.
+          </p>
+          <div className="mt-6 flex items-center gap-3">
             <SocialLink href="https://www.instagram.com/" label="TurcoLive Instagram">
               <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true" fill="none">
                 <rect width="16" height="16" x="4" y="4" rx="4.5" stroke="currentColor" strokeWidth="2" />
@@ -39,7 +44,29 @@ export default function Footer() {
             </SocialLink>
           </div>
         </div>
+
+        <div className="grid gap-8 sm:grid-cols-2 lg:justify-self-end">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-navy/38">Sayfalar</p>
+            <nav className="mt-4 grid gap-3" aria-label="Footer menüsü">
+              {footerLinks.map((link) => (
+                <a key={link.href} className="font-extrabold text-navy/68 transition hover:text-turco" href={link.href}>
+                  {link.label}
+                </a>
+              ))}
+            </nav>
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-navy/38">Durum</p>
+            <p className="mt-4 rounded-2xl bg-porcelain px-4 py-3 font-extrabold text-navy">
+              Topluluk odaklı MVP
+            </p>
+          </div>
+        </div>
       </motion.div>
+      <div className="border-t border-navy/10 px-4 py-5 text-center text-sm font-bold text-navy/50 sm:px-6 lg:px-8">
+        © 2026 TurcoLive
+      </div>
     </footer>
   );
 }

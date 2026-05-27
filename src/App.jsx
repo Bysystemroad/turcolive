@@ -6,9 +6,22 @@ import ListingsPage from './pages/ListingsPage.jsx';
 import SubmitPage from './pages/SubmitPage.jsx';
 import ListingDetailPage from './pages/ListingDetailPage.jsx';
 import AdminPage from './pages/AdminPage.jsx';
+import StaticPage from './pages/StaticPage.jsx';
 import { createListing, fetchListings } from './services/listings.js';
 
-const pages = ['anasayfa', 'ilanlar', 'ilan-ver', 'nasil-calisir', 'admin'];
+const pages = [
+  'anasayfa',
+  'ilanlar',
+  'ilan-ver',
+  'nasil-calisir',
+  'admin',
+  'hakkimizda',
+  'gizlilik-politikasi',
+  'kullanim-sartlari',
+  'iletisim',
+];
+
+const staticPages = ['hakkimizda', 'gizlilik-politikasi', 'kullanim-sartlari', 'iletisim'];
 
 function getInitialPage() {
   const hash = window.location.hash.replace('#', '');
@@ -107,6 +120,10 @@ export default function App() {
 
     if (page === 'admin') {
       return <AdminPage />;
+    }
+
+    if (staticPages.includes(page)) {
+      return <StaticPage pageId={page} />;
     }
 
     return <HomePage onNavigate={goTo} />;
