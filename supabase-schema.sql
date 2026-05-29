@@ -1,26 +1,27 @@
 -- TurcoLive Supabase setup reference
 -- Run this in the Supabase SQL editor if the listings table or storage bucket are not created yet.
 
+create extension if not exists pgcrypto;
+
 create table if not exists public.listings (
-  id uuid primary key,
+  id uuid primary key default gen_random_uuid(),
   created_at timestamptz not null default now(),
   full_name text not null,
   title text not null,
   city text not null,
-  district text not null,
-  rent text not null,
+  address text not null,
+  monthly_rent text not null,
   deposit text not null,
   room_type text not null,
-  home_type text not null,
-  target_audience text not null,
+  house_type text not null,
+  target_group text not null,
   gender_preference text not null,
   people_count text not null,
   description text not null,
-  contact text not null,
+  contact_info text not null,
   phone_number text not null,
-  status text not null default 'pending',
-  image_file_names text[] not null default '{}',
-  image_urls text[] not null default '{}'
+  image_urls text[] not null default '{}',
+  status text not null default 'pending'
 );
 
 alter table public.listings enable row level security;

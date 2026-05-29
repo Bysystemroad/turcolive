@@ -13,27 +13,28 @@ function assertSupabaseConfigured() {
   }
 }
 
+function normalizeCity(city) {
+  return CITY_ALIASES[city] || city;
+}
+
 function toDbListing(listing) {
   return {
-    id: listing.id,
-    created_at: listing.createdAt,
     full_name: listing.fullName,
     title: listing.title,
     city: listing.city,
-    district: listing.district,
-    rent: listing.rent,
+    address: listing.district,
+    monthly_rent: listing.rent,
     deposit: listing.deposit,
     room_type: listing.roomType,
-    home_type: listing.homeType,
-    target_audience: listing.targetAudience,
+    house_type: listing.homeType,
+    target_group: listing.targetAudience,
     gender_preference: listing.genderPreference,
     people_count: listing.peopleCount,
     description: listing.description,
-    contact: listing.contact,
+    contact_info: listing.contact,
     phone_number: listing.phoneNumber,
-    status: listing.status || 'pending',
-    image_file_names: listing.imageFileNames || [],
     image_urls: listing.imageUrls || [],
+    status: 'pending',
   };
 }
 
@@ -43,17 +44,17 @@ function fromDbListing(listing) {
     createdAt: listing.created_at,
     fullName: listing.full_name,
     title: listing.title,
-    city: CITY_ALIASES[listing.city] || listing.city,
-    district: listing.district,
-    rent: listing.rent,
+    city: normalizeCity(listing.city),
+    district: listing.address ?? listing.district ?? '',
+    rent: listing.monthly_rent ?? listing.rent ?? '',
     deposit: listing.deposit,
     roomType: listing.room_type,
-    homeType: listing.home_type,
-    targetAudience: listing.target_audience,
+    homeType: listing.house_type ?? listing.home_type ?? '',
+    targetAudience: listing.target_group ?? listing.target_audience ?? '',
     genderPreference: listing.gender_preference,
     peopleCount: listing.people_count,
     description: listing.description,
-    contact: listing.contact,
+    contact: listing.contact_info ?? listing.contact ?? '',
     phoneNumber: listing.phone_number,
     status: listing.status || 'pending',
     imageFileNames: listing.image_file_names || [],
@@ -120,18 +121,12 @@ export async function fetchListings({ includePending = false } = {}) {
 export async function createListing(listing) {
   assertSupabaseConfigured();
 
-  const id = listing.id || crypto.randomUUID();
-  const createdAt = listing.createdAt || new Date().toISOString();
-  const uploadedImages = await uploadListingPhotos(id, listing.imageFiles || []);
-  const imageFileNames = uploadedImages.map((image) => image.fileName);
+  const uploadFolderId = listing.id || crypto.randomUUID();
+  const uploadedImages = await uploadListingPhotos(uploadFolderId, listing.imageFiles || []);
   const imageUrls = uploadedImages.map((image) => image.url);
 
   const dbListing = toDbListing({
     ...listing,
-    id,
-    createdAt,
-    status: 'pending',
-    imageFileNames,
     imageUrls,
   });
 
