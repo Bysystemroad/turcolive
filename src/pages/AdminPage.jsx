@@ -63,11 +63,18 @@ export default function AdminPage() {
   };
 
   const handleStatusChange = async (listingId, status) => {
+    const previousListings = listings;
+    setListings((current) =>
+      current.map((listing) => (listing.id === listingId ? { ...listing, status } : listing))
+    );
+    setMessage('');
+
     try {
       const updatedListing = await updateListingStatus(listingId, status);
       setListings((current) => current.map((listing) => (listing.id === listingId ? updatedListing : listing)));
       setMessage('');
     } catch (error) {
+      setListings(previousListings);
       setMessage(error.message || 'İlan durumu güncellenemedi.');
     }
   };
@@ -183,24 +190,30 @@ export default function AdminPage() {
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2 lg:justify-end">
-                      <ActionButton
-                        label="Onayla"
-                        icon={CheckCircle2}
-                        onClick={() => handleStatusChange(listing.id, 'approved')}
-                        className="bg-emerald-50 text-emerald-700 ring-emerald-200"
-                      />
-                      <ActionButton
-                        label="Reddet"
-                        icon={XCircle}
-                        onClick={() => handleStatusChange(listing.id, 'rejected')}
-                        className="bg-blush text-turco ring-turco/10"
-                      />
-                      <ActionButton
-                        label="Spam"
-                        icon={ShieldAlert}
-                        onClick={() => handleStatusChange(listing.id, 'spam')}
-                        className="bg-navy text-white ring-navy/10"
-                      />
+                      {status !== 'approved' && (
+                        <ActionButton
+                          label="Onayla"
+                          icon={CheckCircle2}
+                          onClick={() => handleStatusChange(listing.id, 'approved')}
+                          className="bg-emerald-50 text-emerald-700 ring-emerald-200"
+                        />
+                      )}
+                      {status !== 'rejected' && (
+                        <ActionButton
+                          label="Reddet"
+                          icon={XCircle}
+                          onClick={() => handleStatusChange(listing.id, 'rejected')}
+                          className="bg-blush text-turco ring-turco/10"
+                        />
+                      )}
+                      {status !== 'spam' && (
+                        <ActionButton
+                          label="Spam"
+                          icon={ShieldAlert}
+                          onClick={() => handleStatusChange(listing.id, 'spam')}
+                          className="bg-navy text-white ring-navy/10"
+                        />
+                      )}
                       <ActionButton
                         label="Sil"
                         icon={Trash2}
