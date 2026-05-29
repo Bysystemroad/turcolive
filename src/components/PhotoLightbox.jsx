@@ -240,7 +240,7 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
               >
-                <motion.img
+                <img
                   key={activeImage}
                   src={activeImage}
                   alt={`${title} ${activeIndex + 1}`}
@@ -251,10 +251,6 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
                     transformOrigin: 'center center',
                     transition: isDragging ? 'none' : 'transform 180ms ease-out',
                   }}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0, scale: 0.98 }}
-                  transition={{ duration: 0.25 }}
                   onError={() => markImageBroken(activeImage)}
                 />
               </div>
