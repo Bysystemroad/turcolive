@@ -3,11 +3,15 @@ import { ChevronLeft, ChevronRight, Home, Minus, Plus, RotateCcw, X } from 'luci
 import { useEffect, useRef, useState } from 'react';
 
 const MIN_ZOOM = 1;
-const MAX_ZOOM = 4;
+const MAX_ZOOM = 3;
 const ZOOM_STEP = 0.25;
 
+function clamp(value, min, max) {
+  return Math.min(max, Math.max(min, value));
+}
+
 function clampZoom(value) {
-  return Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(value.toFixed(2))));
+  return clamp(Number(value.toFixed(2)), MIN_ZOOM, MAX_ZOOM);
 }
 
 function getTouchDistance(touches) {
@@ -20,9 +24,11 @@ function getTouchDistance(touches) {
 export default function PhotoLightbox({ images, currentIndex, title = 'İlan fotoğrafı', onChange, onClose }) {
   const [brokenImageUrls, setBrokenImageUrls] = useState({});
   const [zoomLevel, setZoomLevel] = useState(1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
+  const [panX, setPanX] = useState(0);
+  const [panY, setPanY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartRef = useRef({ pointerId: null, x: 0, y: 0, translateX: 0, translateY: 0 });
+  const imageAreaRef = useRef(null);
+  const dragStartRef = useRef({ pointerId: null, x: 0, y: 0, panX: 0, panY: 0 });
   const pinchRef = useRef({ distance: 0, zoom: 1 });
 
   const isOpen = currentIndex !== null && currentIndex !== undefined && images.length > 0;
@@ -32,18 +38,39 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
   const activeImageBroken = Boolean(brokenImageUrls[activeImage]);
   const zoomPercent = Math.round(zoomLevel * 100);
 
+  const getPanBounds = (zoom = zoomLevel) => {
+    const rect = imageAreaRef.current?.getBoundingClientRect();
+    if (!rect || zoom <= 1) return { x: 0, y: 0 };
+    return {
+      x: (rect.width * (zoom - 1)) / 2,
+      y: (rect.height * (zoom - 1)) / 2,
+    };
+  };
+
+  const setClampedPan = (nextPanX, nextPanY, zoom = zoomLevel) => {
+    const bounds = getPanBounds(zoom);
+    setPanX(clamp(nextPanX, -bounds.x, bounds.x));
+    setPanY(clamp(nextPanY, -bounds.y, bounds.y));
+  };
+
   const resetZoom = () => {
     setZoomLevel(1);
-    setTranslate({ x: 0, y: 0 });
+    setPanX(0);
+    setPanY(0);
     setIsDragging(false);
-    dragStartRef.current = { pointerId: null, x: 0, y: 0, translateX: 0, translateY: 0 };
+    dragStartRef.current = { pointerId: null, x: 0, y: 0, panX: 0, panY: 0 };
     pinchRef.current = { distance: 0, zoom: 1 };
   };
 
   const updateZoom = (nextZoom) => {
     const clampedZoom = clampZoom(nextZoom);
     setZoomLevel(clampedZoom);
-    if (clampedZoom === 1) setTranslate({ x: 0, y: 0 });
+    if (clampedZoom === 1) {
+      setPanX(0);
+      setPanY(0);
+      return;
+    }
+    setClampedPan(panX, panY, clampedZoom);
   };
 
   useEffect(() => {
@@ -68,7 +95,7 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeIndex, images.length, isOpen, onChange, onClose, zoomLevel]);
+  }, [activeIndex, images.length, isOpen, onChange, onClose, zoomLevel, panX, panY]);
 
   const goPrevious = () => onChange((activeIndex - 1 + images.length) % images.length);
   const goNext = () => onChange((activeIndex + 1) % images.length);
@@ -95,8 +122,8 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
       pointerId: event.pointerId,
       x: event.clientX,
       y: event.clientY,
-      translateX: translate.x,
-      translateY: translate.y,
+      panX,
+      panY,
     };
     setIsDragging(true);
   };
@@ -105,10 +132,7 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
     if (!isDragging || zoomLevel <= 1 || dragStartRef.current.pointerId !== event.pointerId) return;
     const deltaX = event.clientX - dragStartRef.current.x;
     const deltaY = event.clientY - dragStartRef.current.y;
-    setTranslate({
-      x: dragStartRef.current.translateX + deltaX,
-      y: dragStartRef.current.translateY + deltaY,
-    });
+    setClampedPan(dragStartRef.current.panX + deltaX, dragStartRef.current.panY + deltaY);
   };
 
   const stopDragging = (event) => {
@@ -134,6 +158,11 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
     const nextDistance = getTouchDistance(event.touches);
     const scale = nextDistance / pinchRef.current.distance;
     updateZoom(pinchRef.current.zoom * scale);
+  };
+
+  const handleClose = () => {
+    resetZoom();
+    onClose();
   };
 
   return (
@@ -168,7 +197,7 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
               </div>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={handleClose}
                 className="grid h-11 w-11 place-items-center rounded-full bg-white/10 text-white ring-1 ring-white/15 transition hover:bg-white hover:text-navy"
                 aria-label="Fotoğraf görüntüleyiciyi kapat"
               >
@@ -198,7 +227,8 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
               </div>
             ) : (
               <div
-                className={`flex max-h-[70vh] max-w-full touch-none items-center justify-center overflow-hidden rounded-[1.5rem] ${
+                ref={imageAreaRef}
+                className={`flex h-[70vh] max-h-[70vh] w-full max-w-6xl touch-none items-center justify-center overflow-hidden rounded-[1.5rem] ${
                   zoomLevel > 1 ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : 'cursor-zoom-in'
                 }`}
                 onWheel={handleWheel}
@@ -214,10 +244,10 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
                   key={activeImage}
                   src={activeImage}
                   alt={`${title} ${activeIndex + 1}`}
-                  className="max-h-[68vh] max-w-full select-none rounded-[1.5rem] object-contain shadow-lift ring-1 ring-white/10"
+                  className="max-h-full max-w-full select-none rounded-[1.5rem] object-contain shadow-lift ring-1 ring-white/10"
                   draggable="false"
                   style={{
-                    transform: `scale(${zoomLevel}) translate(${translate.x / zoomLevel}px, ${translate.y / zoomLevel}px)`,
+                    transform: `translate(${panX}px, ${panY}px) scale(${zoomLevel})`,
                     transformOrigin: 'center center',
                     transition: isDragging ? 'none' : 'transform 180ms ease-out',
                   }}
