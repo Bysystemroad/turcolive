@@ -14,8 +14,8 @@ const pageContent = {
     eyebrow: 'Gizlilik Politikası',
     title: 'Kişisel bilgilerin sade ve sorumlu şekilde işlenmesini önemsiyoruz.',
     body: [
-      'TurcoLive, ilan oluşturma ve iletişim kurma amacıyla kullanıcıların paylaştığı bilgileri kullanır.',
-      'Fotoğraflar ve ilan bilgileri Supabase altyapısında saklanır. Hassas bilgilerinizi herkese açık açıklama alanlarında paylaşmamanızı öneririz.',
+      'TurcoLive, kullanıcıların ilan oluşturabilmesi ve birbirleriyle iletişim kurabilmesi için gerekli bilgileri kullanır. Paylaşılan bilgiler yalnızca platformun temel işlevlerini sağlamak amacıyla işlenir.',
+      'Kullanıcıların kişisel ve hassas bilgilerini herkese açık alanlarda paylaşırken dikkatli olmalarını öneririz. Gizliliğinizi korumak ve güvenli bir deneyim sunmak bizim için önemlidir.',
     ],
   },
   'kullanim-sartlari': {
