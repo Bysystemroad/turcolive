@@ -24,8 +24,9 @@ export default function TrustCards() {
               İtalya’da Türk ev arkadaşı bulmak daha hızlı ve doğrudan olmalı.
             </motion.h2>
             <motion.p variants={fadeUp} className="mt-5 max-w-xl text-base leading-8 text-navy/62">
-              TurcoLive; Roma Türk ev arkadaşı, Milano Türk oda ilanları, Bologna Türk öğrenci evi ve İtalya Türk ev arkadaşı
-              aramalarında topluluk odaklı, hızlı iletişime dayanan bir çözüm sunar.
+              TurcoLive, İtalya’da yaşayan Türkler için oluşturulmuş topluluk odaklı bir ev ve oda paylaşım platformudur. Amacımız,
+              ev arayanlar ile ilan sahiplerini hızlı, kolay ve doğrudan iletişimle buluşturmak; ev bulma sürecini daha güvenli ve
+              daha pratik hale getirmektir.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-6 flex flex-wrap gap-2">
               {seoKeywords.map((keyword) => (
