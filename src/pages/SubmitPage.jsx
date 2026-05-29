@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, ImagePlus, Info, UploadCloud } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { CheckCircle2, ImagePlus, Info, RefreshCw, UploadCloud, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { cities, genderPreferences, homeTypes, roomTypes, targetAudiences } from '../data/options.js';
 import { fadeUp, stagger } from '../motion.js';
 
@@ -87,6 +87,50 @@ export default function SubmitPage({ onSubmit }) {
       const next = { ...current };
       delete next[key];
       return next;
+    });
+  };
+
+  const updateImageErrors = (nextFiles) => {
+    setErrors((current) => {
+      const next = { ...current };
+      if (nextFiles.length < 4) {
+        next.imageFiles = requiredMessages.imageFiles;
+      } else {
+        delete next.imageFiles;
+      }
+      return next;
+    });
+  };
+
+  const addImageFiles = (files) => {
+    if (files.length === 0) return;
+    setSubmitError('');
+    setSuccessMessage('');
+    setForm((current) => {
+      const nextFiles = [...current.imageFiles, ...files];
+      updateImageErrors(nextFiles);
+      return { ...current, imageFiles: nextFiles };
+    });
+  };
+
+  const removeImageFile = (index) => {
+    setSubmitError('');
+    setSuccessMessage('');
+    setForm((current) => {
+      const nextFiles = current.imageFiles.filter((_, fileIndex) => fileIndex !== index);
+      updateImageErrors(nextFiles);
+      return { ...current, imageFiles: nextFiles };
+    });
+  };
+
+  const replaceImageFile = (index, file) => {
+    if (!file) return;
+    setSubmitError('');
+    setSuccessMessage('');
+    setForm((current) => {
+      const nextFiles = current.imageFiles.map((currentFile, fileIndex) => (fileIndex === index ? file : currentFile));
+      updateImageErrors(nextFiles);
+      return { ...current, imageFiles: nextFiles };
     });
   };
 
@@ -295,7 +339,9 @@ export default function SubmitPage({ onSubmit }) {
                   fileCount={form.imageFiles.length}
                   error={errors.imageFiles}
                   requiredText="Zorunlu"
-                  onChange={(files) => update('imageFiles', [...form.imageFiles, ...files])}
+                  onAdd={addImageFiles}
+                  onRemove={removeImageFile}
+                  onReplace={replaceImageFile}
                 />
               </motion.div>
             </motion.div>
@@ -372,7 +418,9 @@ function EuroInput({ value, onChange, required = false, error = '' }) {
   );
 }
 
-function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount, error = '', requiredText = '' }) {
+function UploadField({ label, accept, icon: Icon, onAdd, onRemove, onReplace, previews, fileCount, error = '', requiredText = '' }) {
+  const replaceInputRefs = useRef([]);
+
   return (
     <div className="grid gap-2">
       <div className="flex items-center justify-between gap-3">
@@ -388,44 +436,101 @@ function UploadField({ label, accept, icon: Icon, onChange, previews, fileCount,
         <Info size={16} className="text-turco" />
         En az 4 fotoğraf yüklemelisiniz.
       </p>
-      <label
-        className={`group grid min-h-72 cursor-pointer place-items-center overflow-hidden rounded-[1.75rem] border border-dashed bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white ${
+      <div
+        className={`grid min-h-72 place-items-center overflow-hidden rounded-[1.75rem] border border-dashed bg-white/72 p-4 text-center transition hover:border-turco/60 hover:bg-white ${
           error ? 'border-turco ring-2 ring-turco/20' : 'border-navy/20'
         }`}
       >
         {previews.length > 0 ? (
           <div className="grid w-full gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {previews.map((preview, index) => (
-              <motion.img
+              <motion.div
                 key={preview}
-                className="aspect-[4/3] w-full rounded-2xl object-cover shadow-sm ring-1 ring-navy/10"
-                src={preview}
-                alt={`Seçilen fotoğraf ${index + 1}`}
+                className="group/photo relative overflow-hidden rounded-2xl bg-porcelain shadow-sm ring-1 ring-navy/10"
                 initial={{ opacity: 0, scale: 0.94 }}
                 animate={{ opacity: 1, scale: 1 }}
-              />
+                whileHover={{ y: -4, scale: 1.01 }}
+              >
+                <img
+                  className="aspect-[4/3] w-full object-cover transition duration-300 group-hover/photo:scale-105"
+                  src={preview}
+                  alt={`Seçilen fotoğraf ${index + 1}`}
+                />
+                <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 bg-gradient-to-b from-navy/55 to-transparent p-3">
+                  <span className="rounded-full bg-white/92 px-3 py-1 text-xs font-black text-navy shadow-sm backdrop-blur-xl">
+                    {index + 1}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onRemove(index)}
+                    className="grid h-10 w-10 place-items-center rounded-full bg-white/94 text-turco shadow-sm ring-1 ring-turco/10 transition hover:bg-turco hover:text-white"
+                    aria-label={`${index + 1}. fotoğrafı kaldır`}
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+                <div className="absolute inset-x-0 bottom-0 flex justify-center bg-gradient-to-t from-navy/58 to-transparent p-3">
+                  <button
+                    type="button"
+                    onClick={() => replaceInputRefs.current[index]?.click()}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-full bg-white/94 px-4 py-2 text-xs font-black text-navy shadow-sm ring-1 ring-navy/10 backdrop-blur-xl transition hover:bg-blush hover:text-turco"
+                  >
+                    <RefreshCw size={15} />
+                    Değiştir
+                  </button>
+                  <input
+                    ref={(element) => {
+                      replaceInputRefs.current[index] = element;
+                    }}
+                    className="sr-only"
+                    type="file"
+                    accept={accept}
+                    onChange={(event) => {
+                      onReplace(index, event.target.files?.[0]);
+                      event.target.value = '';
+                    }}
+                  />
+                </div>
+              </motion.div>
             ))}
+            <label className="group grid aspect-[4/3] cursor-pointer place-items-center rounded-2xl border border-dashed border-navy/20 bg-white/82 p-4 text-center transition hover:border-turco/60 hover:bg-white">
+              <span className="flex flex-col items-center gap-3 text-sm font-black text-navy/58">
+                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-blush text-turco ring-1 ring-turco/10 transition group-hover:scale-105">
+                  <Icon size={22} />
+                </span>
+                Daha fazla fotoğraf ekle
+              </span>
+              <input
+                className="sr-only"
+                type="file"
+                accept={accept}
+                multiple
+                onChange={(event) => {
+                  onAdd(Array.from(event.target.files || []));
+                  event.target.value = '';
+                }}
+              />
+            </label>
           </div>
         ) : (
-          <span className="flex flex-col items-center gap-3 p-6 text-sm font-bold text-navy/55">
+          <label className="group flex cursor-pointer flex-col items-center gap-3 p-6 text-sm font-bold text-navy/55">
             <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white text-turco shadow-sm ring-1 ring-turco/10 transition group-hover:scale-105">
               <Icon size={24} />
             </span>
             Fotoğrafları seç
-          </span>
+            <input
+              className="sr-only"
+              type="file"
+              accept={accept}
+              multiple
+              onChange={(event) => {
+                onAdd(Array.from(event.target.files || []));
+                event.target.value = '';
+              }}
+            />
+          </label>
         )}
-        <input
-          className="sr-only"
-          type="file"
-          accept={accept}
-          multiple
-          required
-          onChange={(event) => {
-            onChange(Array.from(event.target.files || []));
-            event.target.value = '';
-          }}
-        />
-      </label>
+      </div>
       {error && <p className="text-sm font-extrabold text-turco">{error}</p>}
     </div>
   );
