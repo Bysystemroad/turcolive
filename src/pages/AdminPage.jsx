@@ -1,9 +1,8 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, LogOut, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { getCurrentAdminUser, signInAdmin, signOutAdmin } from '../services/adminAuth.js';
 import { deleteListing, fetchListings, updateListingStatus } from '../services/listings.js';
-
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '';
 
 const statusLabels = {
   pending: 'Beklemede',
@@ -20,11 +19,13 @@ const statusClasses = {
 };
 
 export default function AdminPage() {
-  const [authorized, setAuthorized] = useState(() => sessionStorage.getItem('turcolive_admin') === 'true');
+  const [authorized, setAuthorized] = useState(false);
+  const [authChecking, setAuthChecking] = useState(true);
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
+  const [authError, setAuthError] = useState('');
   const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
   const counts = useMemo(() => {
@@ -48,22 +49,66 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    if (authorized) loadAdminListings();
+    let active = true;
+
+    async function checkAdminSession() {
+      try {
+        const adminUser = await getCurrentAdminUser();
+        if (active) {
+          setAuthorized(Boolean(adminUser));
+          setAuthError('');
+        }
+      } catch (error) {
+        if (active) setAuthError(error.message || 'Admin oturumu kontrol edilemedi.');
+      } finally {
+        if (active) setAuthChecking(false);
+      }
+    }
+
+    checkAdminSession();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (authorized) {
+      loadAdminListings();
+    }
   }, [authorized]);
 
-  const handleLogin = (event) => {
+  const handleLogin = async (event) => {
     event.preventDefault();
-    if (!ADMIN_PASSWORD) {
-      setPasswordError('Admin şifresi yapılandırılmamış.');
+
+    if (!email.trim() || !password.trim()) {
+      setAuthError('E-posta ve şifre alanları zorunludur.');
       return;
     }
-    if (password !== ADMIN_PASSWORD) {
-      setPasswordError('Admin şifresi hatalı.');
-      return;
+
+    setAuthChecking(true);
+    setAuthError('');
+
+    try {
+      await signInAdmin(email.trim(), password);
+      setAuthorized(true);
+      setPassword('');
+    } catch (error) {
+      setAuthError(error.message || 'Admin girişi yapılamadı.');
+    } finally {
+      setAuthChecking(false);
     }
-    sessionStorage.setItem('turcolive_admin', 'true');
-    setAuthorized(true);
-    setPasswordError('');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOutAdmin();
+      setAuthorized(false);
+      setListings([]);
+      setMessage('');
+    } catch (error) {
+      setMessage(error.message || 'Çıkış yapılamadı.');
+    }
   };
 
   const handleStatusChange = async (listingId, status) => {
@@ -93,33 +138,59 @@ export default function AdminPage() {
     }
   };
 
+  if (authChecking && !authorized) {
+    return (
+      <section className="soft-grid grid min-h-screen place-items-center bg-porcelain px-4 py-14">
+        <div className="premium-surface w-full max-w-md rounded-[2rem] border border-white/80 p-6 text-center text-sm font-extrabold text-navy/65 shadow-card ring-1 ring-navy/5">
+          Admin oturumu kontrol ediliyor.
+        </div>
+      </section>
+    );
+  }
+
   if (!authorized) {
     return (
       <section className="soft-grid grid min-h-screen place-items-center bg-porcelain px-4 py-14">
         <form onSubmit={handleLogin} className="premium-surface w-full max-w-md rounded-[2rem] border border-white/80 p-6 shadow-card ring-1 ring-navy/5">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-turco">Admin</p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight text-navy">Geçici admin girişi</h1>
+          <h1 className="mt-3 text-3xl font-black tracking-tight text-navy">Admin girişi</h1>
           <label className="mt-6 grid gap-2">
-            <span className="label">Admin şifresi</span>
+            <span className="label">E-posta</span>
             <input
-              className={`field ${passwordError ? 'border-turco ring-2 ring-turco/20' : ''}`}
+              className={`field ${authError ? 'border-turco ring-2 ring-turco/20' : ''}`}
+              type="email"
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                setAuthError('');
+              }}
+              autoComplete="email"
+              placeholder="admin@turcolive.com"
+            />
+          </label>
+          <label className="mt-4 grid gap-2">
+            <span className="label">Şifre</span>
+            <input
+              className={`field ${authError ? 'border-turco ring-2 ring-turco/20' : ''}`}
               type="password"
               value={password}
               onChange={(event) => {
                 setPassword(event.target.value);
-                setPasswordError('');
+                setAuthError('');
               }}
-              placeholder="Admin şifresi"
+              autoComplete="current-password"
+              placeholder="Şifreniz"
             />
           </label>
-          {passwordError && <p className="mt-3 text-sm font-extrabold text-turco">{passwordError}</p>}
+          {authError && <p className="mt-3 text-sm font-extrabold text-turco">{authError}</p>}
           <motion.button
             type="submit"
-            className="premium-button mt-6 w-full"
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
+            disabled={authChecking}
+            className="premium-button mt-6 w-full disabled:cursor-not-allowed disabled:opacity-60"
+            whileHover={{ scale: authChecking ? 1 : 1.03, y: authChecking ? 0 : -2 }}
+            whileTap={{ scale: authChecking ? 1 : 0.97 }}
           >
-            Admin Paneline Gir
+            {authChecking ? 'Giriş yapılıyor' : 'Admin Paneline Gir'}
           </motion.button>
         </form>
       </section>
@@ -143,6 +214,16 @@ export default function AdminPage() {
           >
             <RefreshCw size={17} />
             Yenile
+          </motion.button>
+          <motion.button
+            type="button"
+            onClick={handleSignOut}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-navy px-6 py-3 text-sm font-black text-white shadow-card ring-1 ring-navy/10 transition hover:bg-turco"
+            whileHover={{ scale: 1.03, y: -2 }}
+            whileTap={{ scale: 0.97 }}
+          >
+            <LogOut size={17} />
+            Çıkış Yap
           </motion.button>
         </div>
 

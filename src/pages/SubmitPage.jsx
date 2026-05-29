@@ -40,6 +40,10 @@ const requiredMessages = {
   imageFiles: 'En az 4 fotoğraf yüklemelisiniz.',
 };
 
+const maxImageSizeBytes = 8 * 1024 * 1024;
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+
 function useObjectUrls(files) {
   const urls = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
 
@@ -67,6 +71,36 @@ function validateForm(form) {
   });
 
   return nextErrors;
+}
+
+function getFileExtension(fileName) {
+  return String(fileName || '').split('.').pop()?.toLowerCase() || '';
+}
+
+function getImageValidationError(file) {
+  const extension = getFileExtension(file.name);
+
+  if (!allowedImageTypes.includes(file.type) || !allowedImageExtensions.includes(extension)) {
+    return 'Sadece JPG, PNG veya WebP formatında fotoğraf yükleyebilirsiniz.';
+  }
+
+  if (file.size > maxImageSizeBytes) {
+    return 'Her fotoğraf en fazla 8 MB olabilir.';
+  }
+
+  return '';
+}
+
+function filterValidImageFiles(files) {
+  const validFiles = [];
+
+  for (const file of files) {
+    const error = getImageValidationError(file);
+    if (error) return { validFiles, error };
+    validFiles.push(file);
+  }
+
+  return { validFiles, error: '' };
 }
 
 export default function SubmitPage({ onSubmit }) {
@@ -104,10 +138,15 @@ export default function SubmitPage({ onSubmit }) {
 
   const addImageFiles = (files) => {
     if (files.length === 0) return;
+    const { validFiles, error } = filterValidImageFiles(files);
+    if (error) {
+      setErrors((current) => ({ ...current, imageFiles: error }));
+      return;
+    }
     setSubmitError('');
     setSuccessMessage('');
     setForm((current) => {
-      const nextFiles = [...current.imageFiles, ...files];
+      const nextFiles = [...current.imageFiles, ...validFiles];
       updateImageErrors(nextFiles);
       return { ...current, imageFiles: nextFiles };
     });
@@ -125,6 +164,11 @@ export default function SubmitPage({ onSubmit }) {
 
   const replaceImageFile = (index, file) => {
     if (!file) return;
+    const validationError = getImageValidationError(file);
+    if (validationError) {
+      setErrors((current) => ({ ...current, imageFiles: validationError }));
+      return;
+    }
     setSubmitError('');
     setSuccessMessage('');
     setForm((current) => {
@@ -138,6 +182,9 @@ export default function SubmitPage({ onSubmit }) {
     event.preventDefault();
 
     const nextErrors = validateForm(form);
+    const invalidImage = form.imageFiles.map(getImageValidationError).find(Boolean);
+    if (invalidImage) nextErrors.imageFiles = invalidImage;
+
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       return;
@@ -333,7 +380,7 @@ export default function SubmitPage({ onSubmit }) {
               <motion.div className="sm:col-span-2" variants={fadeUp}>
                 <UploadField
                   label="Fotoğraf yükleme"
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/webp"
                   icon={ImagePlus}
                   previews={imagePreviews}
                   fileCount={form.imageFiles.length}

@@ -2,6 +2,9 @@ import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.js';
 
 const LISTINGS_TABLE = 'listings';
 const LISTING_PHOTOS_BUCKET = 'listing-photos';
+const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 const CITY_ALIASES = {
   Floransa: 'Firenze',
   Venedik: 'Venezia',
@@ -111,17 +114,36 @@ function sanitizeFileName(fileName) {
     .toLowerCase();
 }
 
+function getFileExtension(fileName) {
+  return String(fileName || '').split('.').pop()?.toLowerCase() || '';
+}
+
+function validateImageFile(file) {
+  const extension = getFileExtension(file.name);
+
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type) || !ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
+    throw new Error('Sadece JPG, PNG veya WebP formatında fotoğraf yükleyebilirsiniz.');
+  }
+
+  if (file.size > MAX_IMAGE_SIZE_BYTES) {
+    throw new Error('Her fotoğraf en fazla 8 MB olabilir.');
+  }
+}
+
 export async function uploadListingPhotos(listingId, imageFiles = []) {
   assertSupabaseConfigured();
 
   const uploadedImages = [];
 
   for (const [index, file] of imageFiles.entries()) {
+    validateImageFile(file);
+
     const fileName = `${Date.now()}-${index + 1}-${sanitizeFileName(file.name)}`;
     const filePath = `${listingId}/${fileName}`;
 
     const { error } = await supabase.storage.from(LISTING_PHOTOS_BUCKET).upload(filePath, file, {
       cacheControl: '3600',
+      contentType: file.type,
       upsert: false,
     });
 
