@@ -1,13 +1,15 @@
 import { motion } from 'framer-motion';
-import { BadgeCheck, Camera, ShieldCheck, UsersRound } from 'lucide-react';
+import { BadgeCheck, MessageCircle, ShieldCheck, UsersRound } from 'lucide-react';
 import { fadeUp, stagger } from '../motion.js';
 
 const cards = [
-  { title: 'Türk topluluğu odaklı', text: 'Aynı dili konuşan insanlarla daha rahat iletişim.', icon: UsersRound },
-  { title: 'Fotoğraflı ilanlar', text: 'Mekanı ilk bakışta anlamayı kolaylaştıran görsel deneyim.', icon: Camera },
-  { title: 'Daha şeffaf ev paylaşımı', text: 'Kira, depozito, ev tipi ve yaşam düzeni daha net görünür.', icon: ShieldCheck },
-  { title: 'İtalya’daki Türkler için özel', text: 'Öğrenci ve çalışan ihtiyaçlarına göre sadeleştirilmiş akış.', icon: BadgeCheck },
+  { title: 'Hızlı İletişim', text: 'İlan sahibine tek tıkla WhatsApp üzerinden ulaş.', icon: MessageCircle },
+  { title: 'Türk Topluluğu', text: 'İtalya’da yaşayan Türklerle aynı evi paylaş.', icon: UsersRound },
+  { title: 'Güvenilir İlanlar', text: 'Onaylanan ilanlar sayesinde güvenle iletişim kur.', icon: ShieldCheck },
+  { title: 'İtalya’da Türkler için özel', text: 'Öğrenci ve çalışan ihtiyaçlarına göre sadeleştirilmiş ilan akışı.', icon: BadgeCheck },
 ];
+
+const seoKeywords = ['Roma Türk ev arkadaşı', 'Milano Türk oda ilanları', 'Bologna Türk öğrenci evi', 'İtalya Türk ev arkadaşı'];
 
 export default function TrustCards() {
   return (
@@ -19,8 +21,19 @@ export default function TrustCards() {
           <motion.div className="lg:pt-3" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
             <motion.p variants={fadeUp} className="text-sm font-black uppercase tracking-[0.2em] text-turco">Neden TurcoLive?</motion.p>
             <motion.h2 variants={fadeUp} className="mt-4 text-3xl font-black tracking-tight text-navy sm:text-5xl">
-              Aynı dili konuşan, benzer beklentileri paylaşan bir topluluk.
+              İtalya’da Türk ev arkadaşı bulmak daha hızlı ve doğrudan olmalı.
             </motion.h2>
+            <motion.p variants={fadeUp} className="mt-5 max-w-xl text-base leading-8 text-navy/62">
+              TurcoLive; Roma Türk ev arkadaşı, Milano Türk oda ilanları, Bologna Türk öğrenci evi ve İtalya Türk ev arkadaşı
+              aramalarında topluluk odaklı, hızlı iletişime dayanan bir çözüm sunar.
+            </motion.p>
+            <motion.div variants={fadeUp} className="mt-6 flex flex-wrap gap-2">
+              {seoKeywords.map((keyword) => (
+                <span key={keyword} className="rounded-full bg-white px-4 py-2 text-xs font-black text-navy shadow-sm ring-1 ring-navy/10">
+                  {keyword}
+                </span>
+              ))}
+            </motion.div>
           </motion.div>
           <motion.div className="grid gap-5 sm:grid-cols-2" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
             {cards.map((card) => {

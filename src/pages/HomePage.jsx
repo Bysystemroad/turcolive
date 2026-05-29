@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { ArrowRight, Building2, Camera, HeartHandshake, Image, ShieldCheck, Sparkles } from 'lucide-react';
+import { ArrowRight, Building2, MessageCircle, ShieldCheck, Sparkles, UsersRound, Zap } from 'lucide-react';
 import { useEffect } from 'react';
 import FAQ from '../components/FAQ.jsx';
 import HowItWorks from '../components/HowItWorks.jsx';
@@ -28,17 +28,16 @@ export default function HomePage({ onNavigate }) {
               className="inline-flex w-fit items-center gap-2 rounded-full border border-turco/15 bg-white/78 px-4 py-2 text-sm font-black text-turco shadow-sm backdrop-blur-xl"
             >
               <Sparkles size={17} />
-              İtalya’daki Türk topluluğu için premium ev paylaşımı
+              Türk ev arkadaşı bul, WhatsApp ile hemen yaz
             </motion.div>
             <motion.h1
               variants={fadeUp}
-              className="mt-8 max-w-3xl text-5xl font-black tracking-tight text-navy sm:text-7xl lg:text-8xl"
+              className="mt-8 max-w-4xl text-5xl font-black tracking-tight text-navy sm:text-7xl lg:text-8xl"
             >
-              İtalya’da Türklerle aynı evi daha güvenle paylaş.
+              İtalya&apos;da Türk Ev Arkadaşı Bulmanın En Kolay Yolu
             </motion.h1>
             <motion.p variants={fadeUp} className="mt-6 max-w-2xl text-lg leading-8 text-navy/68 sm:text-xl">
-              TurcoLive, İtalya’da yaşayan Türklerin ev, oda ve ev arkadaşı bulmasını daha sade, sıcak ve güven veren
-              bir deneyime dönüştüren topluluk odaklı platformdur.
+              Tek tıkla WhatsApp üzerinden iletişime geç. Aracı yok, bekleme yok, doğrudan iletişim.
             </motion.p>
             <motion.div variants={fadeUp} className="mt-9 flex flex-col gap-3 sm:flex-row">
               <motion.button
@@ -62,7 +61,7 @@ export default function HomePage({ onNavigate }) {
               </motion.button>
             </motion.div>
             <motion.div variants={stagger} className="mt-10 grid max-w-2xl gap-3 sm:grid-cols-3">
-              {['Fotoğraflı ilan', 'Türk topluluğu', 'Rezervasyon yok'].map((item) => (
+              {['WhatsApp ile hızlı iletişim', 'Türk topluluğu', 'Aracısız bağlantı'].map((item) => (
                 <motion.div
                   key={item}
                   variants={scaleIn}
@@ -85,20 +84,20 @@ export default function HomePage({ onNavigate }) {
                 <div className="flex items-center justify-between gap-4">
                   <img className="h-20 w-20 rounded-3xl object-contain ring-1 ring-navy/10" src="/brand/turcolive-logo-cropped.png" alt="TurcoLive logosu" />
                   <span className="rounded-full bg-blush px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-turco">
-                    Topluluk
+                    Hızlı iletişim
                   </span>
                 </div>
                 <div className="mt-5 overflow-hidden rounded-[2rem]">
                   <motion.img
                     className="h-72 w-full object-cover sm:h-80"
                     src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=1200&q=85"
-                    alt="Modern ve sıcak bir apartman oturma alanı"
+                    alt="İtalya’da paylaşımlı ev yaşam alanı"
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.5 }}
                   />
                 </div>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                  <Metric value="Foto" text="Fotoğraf odaklı ilan deneyimi" />
+                  <Metric value="1 tık" text="WhatsApp ile doğrudan iletişim" />
                   <Metric value="TR" text="İtalya’daki Türkler için özel" accent />
                 </div>
               </div>
@@ -111,13 +110,13 @@ export default function HomePage({ onNavigate }) {
               transition={{ delay: 0.45, duration: 0.55 }}
             >
               <div className="flex items-start gap-4">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-turco text-white shadow-sm">
-                  <Camera size={23} />
+                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#20B15A] text-white shadow-sm">
+                  <MessageCircle size={23} />
                 </span>
                 <div>
-                  <p className="font-black text-navy">Fotoğraflarla daha net ilanlar</p>
+                  <p className="font-black text-navy">WhatsApp ile anında yaz</p>
                   <p className="mt-1 text-sm leading-6 text-navy/62">
-                    İlanlarda ev veya oda fotoğrafı kullanılır; karar vermeden önce mekanı daha rahat incelersin.
+                    Uygun ilanı bulduğunda beklemeden ilan sahibine ulaş; detayları doğrudan konuş.
                   </p>
                 </div>
               </div>
@@ -133,7 +132,7 @@ export default function HomePage({ onNavigate }) {
                 </span>
                 <div>
                   <p className="text-xs font-bold text-navy/45">Odak</p>
-                  <p className="text-sm font-black text-navy">Ev ve oda paylaşımı</p>
+                  <p className="text-sm font-black text-navy">Türk ev arkadaşı</p>
                 </div>
               </div>
             </motion.div>
@@ -148,9 +147,9 @@ export default function HomePage({ onNavigate }) {
       <section className="bg-white px-4 pb-6 pt-20 sm:px-6 lg:px-8">
         <motion.div className="mx-auto grid max-w-7xl gap-4 md:grid-cols-3" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
           {[
-            { icon: ShieldCheck, title: 'Güven hissi', text: 'Ev paylaşımında açık bilgi ve net iletişim.' },
-            { icon: Image, title: 'Fotoğrafla görünür', text: 'İlan kartları mekanı fotoğrafla hızlıca anlatır.' },
-            { icon: HeartHandshake, title: 'Ait hissettiren', text: 'Türkçe, sade ve İtalya’daki ihtiyaçlara odaklı.' },
+            { icon: Zap, title: 'Hızlı İletişim', text: 'İlan sahibine tek tıkla WhatsApp üzerinden ulaş.' },
+            { icon: UsersRound, title: 'Türk Topluluğu', text: 'İtalya’da yaşayan Türklerle aynı evi paylaş.' },
+            { icon: ShieldCheck, title: 'Güvenilir İlanlar', text: 'Onaylanan ilanlar sayesinde güvenle iletişim kur.' },
           ].map((item) => {
             const Icon = item.icon;
             return (
@@ -182,7 +181,7 @@ export default function HomePage({ onNavigate }) {
             <div>
               <p className="text-sm font-black uppercase tracking-[0.2em] text-coral">Topluluğa katıl</p>
               <h2 className="mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">
-                Sen de ilanını paylaş, doğru ev arkadaşını bul.
+                Türk ev arkadaşı arayanlara ulaş, WhatsApp ile hızlıca konuş.
               </h2>
             </div>
             <motion.button

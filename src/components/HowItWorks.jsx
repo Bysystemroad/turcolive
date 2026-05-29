@@ -3,10 +3,10 @@ import { Home, MessageCircle, SearchCheck, UserRound } from 'lucide-react';
 import { fadeUp, stagger } from '../motion.js';
 
 const steps = [
-  { title: 'Profilini oluştur', icon: UserRound, text: 'Kendin ve aradığın ev deneyimi hakkında net bilgiler gir.' },
-  { title: 'İlanları incele', icon: SearchCheck, text: 'Şehir, oda tipi, ev tipi ve kimler için filtreleriyle hızlıca tara.' },
-  { title: 'Doğrudan iletişime geç', icon: MessageCircle, text: 'İlan sahibi veya ev arkadaşı adayıyla platform dışı iletişim kur.' },
-  { title: 'Yeni evine taşın', icon: Home, text: 'Kararını ver, detayları konuş ve yeni düzenine güvenle geç.' },
+  { title: 'İlanları filtrele', icon: SearchCheck, text: 'Şehir, oda tipi, ev tipi ve kimler için filtreleriyle sana uygun ilanları hızlıca bul.' },
+  { title: 'Sana uygun kişiyi bul', icon: UserRound, text: 'Yaşam düzeni, bütçe ve beklentilerine uyan Türk ev arkadaşı adaylarını incele.' },
+  { title: 'WhatsApp ile iletişim kur', icon: MessageCircle, text: 'Aracı olmadan ilan sahibiyle tek tıkla WhatsApp üzerinden doğrudan konuş.' },
+  { title: 'Yeni evine taşın', icon: Home, text: 'Detayları netleştir, güvenle anlaş ve İtalya’daki yeni ev düzenine geç.' },
 ];
 
 export default function HowItWorks() {
@@ -17,7 +17,7 @@ export default function HowItWorks() {
         <motion.div className="max-w-2xl" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
           <motion.p variants={fadeUp} className="text-sm font-black uppercase tracking-[0.2em] text-turco">Nasıl Çalışır?</motion.p>
           <motion.h2 variants={fadeUp} className="mt-4 text-3xl font-black tracking-tight text-navy sm:text-5xl">
-            Doğru evi bulmak sade, şeffaf ve güven veren bir süreç olmalı.
+            Türk ev arkadaşını bul, dakikalar içinde iletişime geç.
           </motion.h2>
         </motion.div>
         <motion.div className="mt-12 grid gap-5 md:grid-cols-4" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
