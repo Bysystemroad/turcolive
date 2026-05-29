@@ -5,24 +5,24 @@ import { fadeUp, stagger } from '../motion.js';
 
 const faqs = [
   {
-    question: 'TurcoLive üzerinden ödeme veya rezervasyon yapılıyor mu?',
+    question: 'Neden Facebook grupları yerine TurcoLive?',
     answer:
-      'Hayır. TurcoLive bir ödeme ya da rezervasyon platformu değildir. İlanları inceler, ilan sahibiyle doğrudan iletişime geçersin.',
+      'TurcoLive, İtalya’da ev arayan Türkler için özel olarak tasarlanmıştır. Dağınık sosyal medya paylaşımları yerine filtrelenmiş oda, ev ve ev arkadaşı ilanlarına ulaşabilir, Roma Türk ev arkadaşı, Milano Türk oda ilanları, Bologna Türk öğrenci evi ve diğer şehirlerdeki ilan sahipleriyle doğrudan iletişim kurabilirsiniz.',
+  },
+  {
+    question: 'İlan sahipleriyle nasıl iletişim kurabilirim?',
+    answer:
+      'Beğendiğiniz ilanın sahibine tek tıkla WhatsApp üzerinden ulaşabilirsiniz. Aracı platformlar veya uzun kayıt süreçleri olmadan doğrudan iletişim kurarak İtalya Türk ev arkadaşı bulma sürecini hızlandırabilirsiniz.',
   },
   {
     question: 'TurcoLive kimler için tasarlandı?',
     answer:
-      'İtalya’da yaşayan Türk öğrenciler ve çalışanlar için ev, oda ve ev arkadaşı bulmayı kolaylaştıran topluluk odaklı bir platformdur.',
+      'TurcoLive; öğrenciler, çalışanlar, Erasmus öğrencileri ve İtalya’da yeni bir yaşam kurmak isteyen Türkler için tasarlanmıştır. İtalya’da oda arayan Türkler, ev arkadaşı arayanlar ve evini paylaşmak isteyenler platformu kullanabilir.',
   },
   {
-    question: 'İlan vermek ücretli mi?',
+    question: 'Evimi veya odamı ne kadar hızlı yayınlayabilirim?',
     answer:
-      'Bu MVP sürümünde ödeme sistemi bulunmaz. Kullanıcılar ilan bilgilerini girerek topluluk içinde paylaşım yapabilir.',
-  },
-  {
-    question: 'Fotoğraflarım kalıcı olarak saklanıyor mu?',
-    answer:
-      'Şu an fotoğraflar frontend oturumu içinde önizleme olarak gösterilir. Kalıcı fotoğraf depolama daha sonra backend ile eklenecektir.',
+      'İlanınızı birkaç dakika içinde oluşturabilirsiniz. Fotoğraflarınızı yükleyip gerekli bilgileri ekledikten sonra ilanınız onay sürecine alınır ve kısa süre içerisinde yayına açılır.',
   },
 ];
 
@@ -35,10 +35,10 @@ export default function FAQ() {
         <motion.div className="lg:sticky lg:top-28" variants={stagger} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-80px' }}>
           <motion.p variants={fadeUp} className="text-sm font-black uppercase tracking-[0.2em] text-turco">SSS</motion.p>
           <motion.h2 variants={fadeUp} className="mt-5 max-w-xl text-4xl font-black tracking-tight text-navy sm:text-5xl">
-            Sıkça sorulan sorular
+            Ev Bulmayı Kolaylaştırıyoruz
           </motion.h2>
           <motion.p variants={fadeUp} className="mt-5 max-w-lg text-base leading-7 text-navy/62">
-            TurcoLive’ın nasıl çalıştığını, ilan paylaşımının kapsamını ve mevcut MVP deneyimini buradan hızlıca inceleyebilirsin.
+            İtalya’da yaşayan Türkleri hızlı, güvenilir ve doğrudan iletişimle buluşturuyoruz.
           </motion.p>
         </motion.div>
 
