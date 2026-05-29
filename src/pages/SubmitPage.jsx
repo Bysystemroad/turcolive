@@ -170,7 +170,7 @@ export default function SubmitPage({ onSubmit }) {
       setForm(initialForm);
       setSuccessMessage('İlanınız gönderildi. Onaylandıktan sonra yayınlanacaktır.');
     } catch (error) {
-      setSubmitError(error.message || 'İlan Supabase üzerine kaydedilemedi.');
+      setSubmitError(error.message || 'İlan şu anda kaydedilemedi.');
     } finally {
       setSubmitting(false);
     }
@@ -197,12 +197,12 @@ export default function SubmitPage({ onSubmit }) {
               transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
             />
             <p className="mt-8 text-sm font-black uppercase tracking-[0.2em] text-coral">İlan Ver</p>
-            <h1 className="mt-4 text-4xl font-black tracking-tight">Evin veya odan için güven veren bir ilan oluştur.</h1>
+            <h1 className="mt-4 text-4xl font-black tracking-tight">Evini veya odanı dakikalar içinde paylaş.</h1>
             <div className="mt-8 space-y-4 text-sm leading-6 text-white/78">
               {[
-                'TurcoLive ödeme veya rezervasyon platformu değildir.',
-                'Fotoğraflar Supabase Storage üzerinde saklanır.',
-                'İlanlar onaylandıktan sonra yayına alınır.',
+                'İlan sahipleriyle tek tıkla iletişim kur.',
+                'Fotoğraflarını yükle, ilanını dakikalar içinde paylaş.',
+                'İlanlar kontrol edilerek yayına alınır.',
               ].map((text) => (
                 <p key={text} className="flex gap-3">
                   <CheckCircle2 className="mt-0.5 shrink-0 text-coral" size={20} />
@@ -368,7 +368,7 @@ export default function SubmitPage({ onSubmit }) {
 
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm leading-6 text-navy/55">
-                Gönderilen fotoğraflar Supabase Storage üzerinde saklanır; ilan onaydan sonra yayınlanır.
+                İlanlar kısa bir kontrol sürecinden sonra yayına alınır.
               </p>
               <motion.button
                 type="submit"
