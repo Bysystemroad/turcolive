@@ -38,9 +38,6 @@ export default function ListingCard({ listing, onOpen }) {
   const hasPhoneNumber = Boolean(whatsappLink);
   const telLink = phoneNumber ? `tel:${phoneNumber.replace(/\s/g, '')}` : '';
 
-  console.log('Listing image_urls:', listing.image_urls);
-  console.log('Main image:', listing.image_urls?.[0]);
-
   return (
     <>
       <motion.article

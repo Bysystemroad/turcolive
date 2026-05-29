@@ -161,13 +161,7 @@ export async function fetchListings({ includePending = false } = {}) {
     throw new Error(`İlanlar yüklenemedi: ${error.message}`);
   }
 
-  const listings = (data || []).map(fromDbListing);
-  console.debug(
-    'TurcoLive image_urls',
-    listings.map((listing) => ({ id: listing.id, image_urls: listing.image_urls }))
-  );
-
-  return listings;
+  return (data || []).map(fromDbListing);
 }
 
 export async function createListing(listing) {

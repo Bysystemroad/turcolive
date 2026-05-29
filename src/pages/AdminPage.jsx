@@ -3,7 +3,7 @@ import { CheckCircle2, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-re
 import { useEffect, useMemo, useState } from 'react';
 import { deleteListing, fetchListings, updateListingStatus } from '../services/listings.js';
 
-const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'turcolive-admin';
+const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || '';
 
 const statusLabels = {
   pending: 'Beklemede',
@@ -53,6 +53,10 @@ export default function AdminPage() {
 
   const handleLogin = (event) => {
     event.preventDefault();
+    if (!ADMIN_PASSWORD) {
+      setPasswordError('Admin şifresi yapılandırılmamış.');
+      return;
+    }
     if (password !== ADMIN_PASSWORD) {
       setPasswordError('Admin şifresi hatalı.');
       return;
