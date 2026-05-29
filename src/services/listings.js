@@ -17,6 +17,43 @@ function normalizeCity(city) {
   return CITY_ALIASES[city] || city;
 }
 
+function normalizeStoragePath(value) {
+  return String(value || '')
+    .trim()
+    .replace(/^\/+/, '')
+    .replace(/^listing-photos\/+/, '');
+}
+
+function isUsablePublicUrl(value) {
+  const url = String(value || '').trim();
+  return /^https?:\/\//i.test(url) && !url.startsWith('blob:') && url.includes('/storage/v1/object/public/');
+}
+
+function getPublicImageUrl(value) {
+  const rawValue = String(value || '').trim();
+  if (!rawValue || rawValue.startsWith('blob:')) return '';
+
+  if (isUsablePublicUrl(rawValue)) return rawValue;
+
+  if (/^https?:\/\//i.test(rawValue)) {
+    return rawValue;
+  }
+
+  const filePath = normalizeStoragePath(rawValue);
+  if (!filePath || !supabase) return '';
+
+  const { data } = supabase.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(filePath);
+  return data?.publicUrl || '';
+}
+
+function normalizeImageUrls(imageUrls = []) {
+  const values = Array.isArray(imageUrls) ? imageUrls : [imageUrls];
+
+  return values
+    .map(getPublicImageUrl)
+    .filter((url) => /^https?:\/\//i.test(url) && !url.startsWith('blob:'));
+}
+
 function toDbListing(listing) {
   return {
     full_name: listing.fullName,
@@ -33,12 +70,14 @@ function toDbListing(listing) {
     description: listing.description,
     contact_info: listing.contact,
     phone_number: listing.phoneNumber,
-    image_urls: listing.imageUrls || [],
+    image_urls: normalizeImageUrls(listing.imageUrls || []),
     status: 'pending',
   };
 }
 
 function fromDbListing(listing) {
+  const imageUrls = normalizeImageUrls(listing.image_urls || []);
+
   return {
     id: listing.id,
     createdAt: listing.created_at,
@@ -58,7 +97,8 @@ function fromDbListing(listing) {
     phoneNumber: listing.phone_number,
     status: listing.status || 'pending',
     imageFileNames: listing.image_file_names || [],
-    imageUrls: listing.image_urls || [],
+    imageUrls,
+    image_urls: imageUrls,
   };
 }
 
@@ -90,9 +130,15 @@ export async function uploadListingPhotos(listingId, imageFiles = []) {
     }
 
     const { data } = supabase.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(filePath);
+    const publicUrl = data?.publicUrl || '';
+
+    if (!isUsablePublicUrl(publicUrl)) {
+      throw new Error('Fotoğraf için Supabase public URL üretilemedi.');
+    }
+
     uploadedImages.push({
       fileName: file.name,
-      url: data.publicUrl,
+      url: publicUrl,
       path: filePath,
     });
   }
@@ -115,7 +161,13 @@ export async function fetchListings({ includePending = false } = {}) {
     throw new Error(`İlanlar yüklenemedi: ${error.message}`);
   }
 
-  return (data || []).map(fromDbListing);
+  const listings = (data || []).map(fromDbListing);
+  console.debug(
+    'TurcoLive image_urls',
+    listings.map((listing) => ({ id: listing.id, image_urls: listing.image_urls }))
+  );
+
+  return listings;
 }
 
 export async function createListing(listing) {

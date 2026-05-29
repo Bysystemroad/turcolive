@@ -1,11 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
-import { useEffect } from 'react';
+import { ChevronLeft, ChevronRight, Home, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export default function PhotoLightbox({ images, currentIndex, title = 'İlan fotoğrafı', onChange, onClose }) {
+  const [brokenImageUrls, setBrokenImageUrls] = useState({});
   const isOpen = currentIndex !== null && currentIndex !== undefined && images.length > 0;
+  const imageSignature = images.join('|');
   const activeIndex = Math.min(Math.max(currentIndex ?? 0, 0), Math.max(images.length - 1, 0));
   const activeImage = images[activeIndex];
+  const activeImageBroken = Boolean(brokenImageUrls[activeImage]);
+
+  useEffect(() => {
+    setBrokenImageUrls({});
+  }, [imageSignature]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -22,6 +29,7 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
 
   const goPrevious = () => onChange((activeIndex - 1 + images.length) % images.length);
   const goNext = () => onChange((activeIndex + 1) % images.length);
+  const markImageBroken = (image) => setBrokenImageUrls((current) => ({ ...current, [image]: true }));
 
   return (
     <AnimatePresence>
@@ -61,16 +69,26 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
               </button>
             )}
 
-            <motion.img
-              key={activeImage}
-              src={activeImage}
-              alt={`${title} ${activeIndex + 1}`}
-              className="max-h-[68vh] max-w-full rounded-[1.5rem] object-contain shadow-lift ring-1 ring-white/10"
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.98 }}
-              transition={{ duration: 0.25 }}
-            />
+            {activeImageBroken ? (
+              <div className="grid h-[55vh] w-full max-w-4xl place-items-center rounded-[1.5rem] bg-white/8 text-center text-white/70 ring-1 ring-white/10">
+                <div>
+                  <Home className="mx-auto" size={56} />
+                  <p className="mt-4 text-sm font-black">Fotoğraf yüklenemedi.</p>
+                </div>
+              </div>
+            ) : (
+              <motion.img
+                key={activeImage}
+                src={activeImage}
+                alt={`${title} ${activeIndex + 1}`}
+                className="max-h-[68vh] max-w-full rounded-[1.5rem] object-contain shadow-lift ring-1 ring-white/10"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.25 }}
+                onError={() => markImageBroken(activeImage)}
+              />
+            )}
 
             {images.length > 1 && (
               <button
@@ -96,7 +114,18 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
                   }`}
                   aria-label={`${index + 1}. fotoğrafı aç`}
                 >
-                  <img className="h-full w-full object-cover" src={image} alt={`${title} küçük fotoğraf ${index + 1}`} />
+                  {brokenImageUrls[image] ? (
+                    <span className="grid h-full w-full place-items-center bg-white/8 text-white/60">
+                      <Home size={20} />
+                    </span>
+                  ) : (
+                    <img
+                      className="h-full w-full object-cover"
+                      src={image}
+                      alt={`${title} küçük fotoğraf ${index + 1}`}
+                      onError={() => markImageBroken(image)}
+                    />
+                  )}
                 </button>
               ))}
             </div>

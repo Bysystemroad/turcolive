@@ -26,10 +26,16 @@ function getWhatsappLink(phoneNumber) {
   return `https://wa.me/${cleanedPhoneNumber}?text=${encodeURIComponent(defaultWhatsappMessage)}`;
 }
 
+function getListingImageUrls(listing) {
+  const urls = listing.image_urls || listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
+  return Array.isArray(urls) ? urls.filter(Boolean) : [];
+}
+
 export default function ListingCard({ listing, onOpen }) {
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  const imageUrls = listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
+  const [brokenImageUrls, setBrokenImageUrls] = useState({});
+  const imageUrls = getListingImageUrls(listing).filter((url) => !brokenImageUrls[url]);
   const hasImagePreview = imageUrls.length > 0;
   const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
   const phoneNumber = getPhoneSource(listing);
@@ -61,6 +67,7 @@ export default function ListingCard({ listing, onOpen }) {
                 alt={`${listing.title} - ${listing.city} oda fotoğrafı`}
                 loading="lazy"
                 decoding="async"
+                onError={() => setBrokenImageUrls((current) => ({ ...current, [imageUrls[0]]: true }))}
                 whileHover={{ scale: 1.06 }}
                 transition={{ duration: 0.5 }}
               />

@@ -4,8 +4,14 @@ import { useState } from 'react';
 import PhotoLightbox from '../components/PhotoLightbox.jsx';
 import { fadeUp, stagger } from '../motion.js';
 
+function getListingImageUrls(listing) {
+  const urls = listing.image_urls || listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
+  return Array.isArray(urls) ? urls.filter(Boolean) : [];
+}
+
 export default function ListingDetailPage({ listing, onBack, onNavigate }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [brokenImageUrls, setBrokenImageUrls] = useState({});
 
   if (!listing) {
     return (
@@ -29,7 +35,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
     );
   }
 
-  const imageUrls = listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
+  const imageUrls = getListingImageUrls(listing).filter((url) => !brokenImageUrls[url]);
   const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
   const hasImages = imageUrls.length > 0;
 
@@ -68,6 +74,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
                   alt={`${listing.title} fotoğraf 1`}
                   loading="lazy"
                   decoding="async"
+                  onError={() => setBrokenImageUrls((current) => ({ ...current, [imageUrls[0]]: true }))}
                   whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.35 }}
                 />
@@ -100,6 +107,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
                     alt={`${listing.title} küçük fotoğraf ${index + 1}`}
                     loading="lazy"
                     decoding="async"
+                    onError={() => setBrokenImageUrls((current) => ({ ...current, [image]: true }))}
                   />
                 </motion.button>
               ))}
