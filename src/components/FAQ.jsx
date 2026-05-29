@@ -7,7 +7,7 @@ const faqs = [
   {
     question: 'Neden Facebook grupları yerine TurcoLive?',
     answer:
-      'TurcoLive, İtalya’da ev arayan Türkler için özel olarak tasarlanmıştır. Dağınık sosyal medya paylaşımları yerine filtrelenmiş oda, ev ve ev arkadaşı ilanlarına ulaşabilir, Roma Türk ev arkadaşı, Milano Türk oda ilanları, Bologna Türk öğrenci evi ve diğer şehirlerdeki ilan sahipleriyle doğrudan iletişim kurabilirsiniz.',
+      "TurcoLive, İtalya'da ev arayan Türkleri aynı platformda buluşturur. Dağınık sosyal medya paylaşımları arasında kaybolmak yerine filtrelenmiş ilanlara ulaşabilir ve ilan sahipleriyle tek tıkla iletişim kurabilirsiniz.",
   },
   {
     question: 'İlan sahipleriyle nasıl iletişim kurabilirim?',
