@@ -65,7 +65,7 @@ export default function Footer() {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.18em] text-navy/38">Durum</p>
             <p className="mt-4 rounded-2xl bg-porcelain px-4 py-3 font-extrabold text-navy">
-              Topluluk odaklı MVP
+              Türk Topluluğu İçin
             </p>
           </div>
         </div>
