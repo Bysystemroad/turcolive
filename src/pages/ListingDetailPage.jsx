@@ -4,14 +4,8 @@ import { useState } from 'react';
 import PhotoLightbox from '../components/PhotoLightbox.jsx';
 import { fadeUp, stagger } from '../motion.js';
 
-function getListingImageUrls(listing) {
-  const urls = listing.image_urls || listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
-  return Array.isArray(urls) ? urls.filter(Boolean) : [];
-}
-
 export default function ListingDetailPage({ listing, onBack, onNavigate }) {
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  const [brokenImageUrls, setBrokenImageUrls] = useState({});
 
   if (!listing) {
     return (
@@ -35,8 +29,9 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
     );
   }
 
-  const imageUrls = getListingImageUrls(listing).filter((url) => !brokenImageUrls[url]);
-  const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
+  const imageUrls = Array.isArray(listing.image_urls) ? listing.image_urls : [];
+  const mainImage = listing.image_urls?.[0];
+  const photoCount = imageUrls.length;
   const hasImages = imageUrls.length > 0;
 
   return (
@@ -70,11 +65,10 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
               >
                 <motion.img
                   className="h-80 w-full object-contain sm:h-[30rem] lg:h-[34rem]"
-                  src={imageUrls[0]}
+                  src={mainImage}
                   alt={`${listing.title} fotoğraf 1`}
                   loading="lazy"
                   decoding="async"
-                  onError={() => setBrokenImageUrls((current) => ({ ...current, [imageUrls[0]]: true }))}
                   whileHover={{ scale: 1.01 }}
                   transition={{ duration: 0.35 }}
                 />
@@ -107,7 +101,6 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
                     alt={`${listing.title} küçük fotoğraf ${index + 1}`}
                     loading="lazy"
                     decoding="async"
-                    onError={() => setBrokenImageUrls((current) => ({ ...current, [image]: true }))}
                   />
                 </motion.button>
               ))}
@@ -115,7 +108,7 @@ export default function ListingDetailPage({ listing, onBack, onNavigate }) {
           )}
 
           <motion.div className="mt-5 flex flex-wrap gap-3" variants={stagger} initial="hidden" animate="show">
-            <Badge icon={Camera}>{photoCount > 0 ? `${photoCount} fotoğraf` : 'Fotoğraf geçici'}</Badge>
+            <Badge icon={Camera}>{photoCount > 0 ? `${photoCount} fotoğraf` : 'Fotoğraf yok'}</Badge>
             <Badge icon={ShieldCheck}>Topluluk ilanı</Badge>
             {listing.targetAudience && <Badge icon={UsersRound}>{listing.targetAudience}</Badge>}
             {listing.genderPreference && <Badge icon={UserRound}>{listing.genderPreference}</Badge>}

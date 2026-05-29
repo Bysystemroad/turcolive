@@ -26,22 +26,20 @@ function getWhatsappLink(phoneNumber) {
   return `https://wa.me/${cleanedPhoneNumber}?text=${encodeURIComponent(defaultWhatsappMessage)}`;
 }
 
-function getListingImageUrls(listing) {
-  const urls = listing.image_urls || listing.imageUrls || (listing.imageUrl ? [listing.imageUrl] : []);
-  return Array.isArray(urls) ? urls.filter(Boolean) : [];
-}
-
 export default function ListingCard({ listing, onOpen }) {
   const [phoneVisible, setPhoneVisible] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(null);
-  const [brokenImageUrls, setBrokenImageUrls] = useState({});
-  const imageUrls = getListingImageUrls(listing).filter((url) => !brokenImageUrls[url]);
+  const imageUrls = Array.isArray(listing.image_urls) ? listing.image_urls : [];
+  const mainImage = listing.image_urls?.[0];
   const hasImagePreview = imageUrls.length > 0;
-  const photoCount = imageUrls.length || listing.imageFileNames?.length || 0;
+  const photoCount = imageUrls.length;
   const phoneNumber = getPhoneSource(listing);
   const whatsappLink = getWhatsappLink(phoneNumber);
   const hasPhoneNumber = Boolean(whatsappLink);
   const telLink = phoneNumber ? `tel:${phoneNumber.replace(/\s/g, '')}` : '';
+
+  console.log('Listing image_urls:', listing.image_urls);
+  console.log('Main image:', listing.image_urls?.[0]);
 
   return (
     <>
@@ -63,11 +61,10 @@ export default function ListingCard({ listing, onOpen }) {
             {hasImagePreview ? (
               <motion.img
                 className="h-full w-full object-cover"
-                src={imageUrls[0]}
+                src={mainImage}
                 alt={`${listing.title} - ${listing.city} oda fotoğrafı`}
                 loading="lazy"
                 decoding="async"
-                onError={() => setBrokenImageUrls((current) => ({ ...current, [imageUrls[0]]: true }))}
                 whileHover={{ scale: 1.06 }}
                 transition={{ duration: 0.5 }}
               />
@@ -75,16 +72,14 @@ export default function ListingCard({ listing, onOpen }) {
               <div className="grid h-full place-items-center text-center text-navy/45">
                 <div>
                   <Home className="mx-auto" size={44} />
-                  {listing.imageFileNames?.length > 0 && (
-                    <p className="mt-3 text-sm font-extrabold">{listing.imageFileNames.join(', ')}</p>
-                  )}
+                  <p className="mt-3 text-sm font-extrabold">Fotoğraf bulunmuyor</p>
                 </div>
               </div>
             )}
             <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-navy/40 to-transparent opacity-80" />
             <span className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/94 px-3 py-2 text-xs font-black text-turco shadow-sm ring-1 ring-turco/10 backdrop-blur-xl">
               <Camera size={15} />
-              {photoCount > 1 ? `${photoCount} fotoğraf` : hasImagePreview ? 'Fotoğraf eklendi' : 'Fotoğraf geçici'}
+              {hasImagePreview ? `${photoCount} fotoğraf` : 'Fotoğraf yok'}
             </span>
             {listing.targetAudience && (
               <span className="absolute bottom-4 left-4 rounded-full bg-navy/82 px-3 py-2 text-xs font-black text-white backdrop-blur-xl">
