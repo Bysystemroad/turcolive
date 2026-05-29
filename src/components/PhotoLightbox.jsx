@@ -182,12 +182,12 @@ export default function PhotoLightbox({ images, currentIndex, title = 'İlan fot
               {activeIndex + 1} / {images.length}
             </div>
 
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 rounded-full bg-white/10 p-1 ring-1 ring-white/15">
+            <div className="relative z-[120] flex items-center gap-2">
+              <div className="flex items-center gap-1 rounded-2xl border border-white/15 bg-[#0f172a]/85 px-4 py-2.5 shadow-2xl backdrop-blur-xl">
                 <ZoomButton label="Uzaklaştır" onClick={() => updateZoom(zoomLevel - ZOOM_STEP)}>
                   <Minus size={18} />
                 </ZoomButton>
-                <span className="min-w-14 px-2 text-center text-xs font-black text-white/82">{zoomPercent}%</span>
+                <span className="min-w-16 px-2 text-center text-sm font-semibold text-white">{zoomPercent}%</span>
                 <ZoomButton label="Yakınlaştır" onClick={() => updateZoom(zoomLevel + ZOOM_STEP)}>
                   <Plus size={18} />
                 </ZoomButton>
@@ -307,7 +307,7 @@ function ZoomButton({ label, onClick, children }) {
     <button
       type="button"
       onClick={onClick}
-      className="grid h-10 w-10 place-items-center rounded-full text-white transition hover:bg-white hover:text-navy"
+      className="grid min-h-11 min-w-11 place-items-center rounded-xl text-white transition hover:bg-white/15 active:scale-95 active:bg-[#ef4444]/85"
       aria-label={label}
     >
       {children}
