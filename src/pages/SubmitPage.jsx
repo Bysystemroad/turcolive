@@ -19,6 +19,7 @@ const initialForm = {
   description: '',
   contact: '',
   phoneNumber: '',
+  captchaToken: '',
   imageFiles: [],
 };
 
@@ -38,11 +39,13 @@ const requiredMessages = {
   contact: 'İletişim bilgisi alanı zorunludur.',
   phoneNumber: 'Telefon / WhatsApp numarası zorunludur.',
   imageFiles: 'En az 4 fotoğraf yüklemelisiniz.',
+  captchaToken: 'Güvenlik doğrulaması zorunludur.',
 };
 
 const maxImageSizeBytes = 8 * 1024 * 1024;
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 function useObjectUrls(files) {
   const urls = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
@@ -212,6 +215,7 @@ export default function SubmitPage({ onSubmit }) {
         description: form.description.trim(),
         contact: form.contact.trim(),
         phoneNumber: form.phoneNumber.trim(),
+        captchaToken: form.captchaToken,
         imageFiles: form.imageFiles,
       });
       setForm(initialForm);
@@ -391,6 +395,14 @@ export default function SubmitPage({ onSubmit }) {
                   onReplace={replaceImageFile}
                 />
               </motion.div>
+
+              <motion.div className="sm:col-span-2" variants={fadeUp}>
+                <CaptchaField
+                  error={errors.captchaToken}
+                  siteKey={turnstileSiteKey}
+                  onVerify={(token) => update('captchaToken', token)}
+                />
+              </motion.div>
             </motion.div>
 
             {submitError && (
@@ -461,6 +473,72 @@ function EuroInput({ value, onChange, required = false, error = '' }) {
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
+    </div>
+  );
+}
+
+function CaptchaField({ siteKey, onVerify, error = '' }) {
+  const containerRef = useRef(null);
+  const widgetIdRef = useRef(null);
+  const onVerifyRef = useRef(onVerify);
+
+  useEffect(() => {
+    onVerifyRef.current = onVerify;
+  }, [onVerify]);
+
+  useEffect(() => {
+    if (!siteKey) return undefined;
+
+    let cancelled = false;
+    let intervalId;
+
+    const renderTurnstile = () => {
+      if (cancelled || !window.turnstile || !containerRef.current || widgetIdRef.current !== null) return;
+
+      widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        sitekey: siteKey,
+        callback: (token) => onVerifyRef.current(token),
+        'expired-callback': () => onVerifyRef.current(''),
+        'error-callback': () => onVerifyRef.current(''),
+      });
+    };
+
+    if (!window.turnstile && !document.querySelector('script[data-turnstile-script]')) {
+      const script = document.createElement('script');
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.dataset.turnstileScript = 'true';
+      script.onload = renderTurnstile;
+      document.head.appendChild(script);
+    }
+
+    renderTurnstile();
+    intervalId = window.setInterval(renderTurnstile, 250);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+      if (window.turnstile && widgetIdRef.current !== null) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [siteKey]);
+
+  return (
+    <div className={`grid gap-2 rounded-[1.75rem] border bg-white/72 p-4 ${error ? 'border-turco ring-2 ring-turco/20' : 'border-navy/10'}`}>
+      <span className="label">
+        Güvenlik doğrulaması <span className="text-turco">*</span>
+      </span>
+      {siteKey ? (
+        <div ref={containerRef} className="min-h-[65px]" />
+      ) : (
+        <p className="rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10">
+          CAPTCHA site anahtarı yapılandırılmalıdır.
+        </p>
+      )}
+      {error && <p className="text-sm font-extrabold text-turco">{error}</p>}
     </div>
   );
 }

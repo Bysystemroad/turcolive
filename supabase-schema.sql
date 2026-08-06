@@ -73,18 +73,13 @@ drop policy if exists "Temporary admin can delete listings in MVP" on public.lis
 drop policy if exists "Admins can read all listings" on public.listings;
 drop policy if exists "Admins can update listings" on public.listings;
 drop policy if exists "Admins can delete listings" on public.listings;
+drop policy if exists "Public can create pending listings" on public.listings;
 
 create policy "Public can read approved listings"
   on public.listings
   for select
   to anon, authenticated
   using (status = 'approved' or public.is_turcolive_admin());
-
-create policy "Public can create pending listings"
-  on public.listings
-  for insert
-  to anon, authenticated
-  with check (status = 'pending');
 
 create policy "Admins can update listings"
   on public.listings
@@ -126,14 +121,8 @@ create policy "Public can read listing photos"
   to anon, authenticated
   using (bucket_id = 'listing-photos');
 
-create policy "Public can upload listing images"
-  on storage.objects
-  for insert
-  to anon, authenticated
-  with check (
-    bucket_id = 'listing-photos'
-    and lower(storage.extension(name)) in ('jpg', 'jpeg', 'png', 'webp')
-  );
+-- No public storage insert/update/delete policies are created.
+-- Listing photo uploads are handled only by Vercel Functions with SUPABASE_SERVICE_ROLE_KEY.
 
 -- After creating an admin user in Supabase Auth, run this with the real values:
 -- insert into public.admin_users (user_id, email)

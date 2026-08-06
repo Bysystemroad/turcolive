@@ -2,9 +2,6 @@ import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.js';
 
 const LISTINGS_TABLE = 'listings';
 const LISTING_PHOTOS_BUCKET = 'listing-photos';
-const MAX_IMAGE_SIZE_BYTES = 8 * 1024 * 1024;
-const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
-const ALLOWED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 const CITY_ALIASES = {
   Floransa: 'Firenze',
   Venedik: 'Venezia',
@@ -12,7 +9,7 @@ const CITY_ALIASES = {
 
 function assertSupabaseConfigured() {
   if (!isSupabaseConfigured || !supabase) {
-    throw new Error('Supabase bağlantısı yapılandırılmamış.');
+    throw new Error('Supabase baglantisi yapilandirilmamis.');
   }
 }
 
@@ -57,27 +54,6 @@ function normalizeImageUrls(imageUrls = []) {
     .filter((url) => /^https?:\/\//i.test(url) && !url.startsWith('blob:'));
 }
 
-function toDbListing(listing) {
-  return {
-    full_name: listing.fullName,
-    title: listing.title,
-    city: listing.city,
-    address: listing.district,
-    monthly_rent: listing.rent,
-    deposit: listing.deposit,
-    room_type: listing.roomType,
-    house_type: listing.homeType,
-    target_group: listing.targetAudience,
-    gender_preference: listing.genderPreference,
-    people_count: listing.peopleCount,
-    description: listing.description,
-    contact_info: listing.contact,
-    phone_number: listing.phoneNumber,
-    image_urls: normalizeImageUrls(listing.imageUrls || []),
-    status: 'pending',
-  };
-}
-
 function fromDbListing(listing) {
   const imageUrls = normalizeImageUrls(listing.image_urls || []);
 
@@ -105,69 +81,6 @@ function fromDbListing(listing) {
   };
 }
 
-function sanitizeFileName(fileName) {
-  return String(fileName || 'image')
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, '-')
-    .replace(/-+/g, '-')
-    .toLowerCase();
-}
-
-function getFileExtension(fileName) {
-  return String(fileName || '').split('.').pop()?.toLowerCase() || '';
-}
-
-function validateImageFile(file) {
-  const extension = getFileExtension(file.name);
-
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type) || !ALLOWED_IMAGE_EXTENSIONS.includes(extension)) {
-    throw new Error('Sadece JPG, PNG veya WebP formatında fotoğraf yükleyebilirsiniz.');
-  }
-
-  if (file.size > MAX_IMAGE_SIZE_BYTES) {
-    throw new Error('Her fotoğraf en fazla 8 MB olabilir.');
-  }
-}
-
-export async function uploadListingPhotos(listingId, imageFiles = []) {
-  assertSupabaseConfigured();
-
-  const uploadedImages = [];
-
-  for (const [index, file] of imageFiles.entries()) {
-    validateImageFile(file);
-
-    const fileName = `${Date.now()}-${index + 1}-${sanitizeFileName(file.name)}`;
-    const filePath = `${listingId}/${fileName}`;
-
-    const { error } = await supabase.storage.from(LISTING_PHOTOS_BUCKET).upload(filePath, file, {
-      cacheControl: '3600',
-      contentType: file.type,
-      upsert: false,
-    });
-
-    if (error) {
-      throw new Error(`Fotoğraf yüklenemedi: ${error.message}`);
-    }
-
-    const { data } = supabase.storage.from(LISTING_PHOTOS_BUCKET).getPublicUrl(filePath);
-    const publicUrl = data?.publicUrl || '';
-
-    if (!isUsablePublicUrl(publicUrl)) {
-      throw new Error('Fotoğraf için Supabase public URL üretilemedi.');
-    }
-
-    uploadedImages.push({
-      fileName: file.name,
-      url: publicUrl,
-      path: filePath,
-    });
-  }
-
-  return uploadedImages;
-}
-
 export async function fetchListings({ includePending = false } = {}) {
   assertSupabaseConfigured();
 
@@ -180,31 +93,51 @@ export async function fetchListings({ includePending = false } = {}) {
   const { data, error } = await query;
 
   if (error) {
-    throw new Error(`İlanlar yüklenemedi: ${error.message}`);
+    throw new Error(`Ilanlar yuklenemedi: ${error.message}`);
   }
 
   return (data || []).map(fromDbListing);
 }
 
 export async function createListing(listing) {
-  assertSupabaseConfigured();
+  const formData = new FormData();
 
-  const uploadFolderId = listing.id || crypto.randomUUID();
-  const uploadedImages = await uploadListingPhotos(uploadFolderId, listing.imageFiles || []);
-  const imageUrls = uploadedImages.map((image) => image.url);
-
-  const dbListing = toDbListing({
-    ...listing,
-    imageUrls,
+  [
+    'fullName',
+    'title',
+    'city',
+    'district',
+    'rent',
+    'deposit',
+    'roomType',
+    'homeType',
+    'targetAudience',
+    'genderPreference',
+    'peopleCount',
+    'description',
+    'contact',
+    'phoneNumber',
+    'captchaToken',
+  ].forEach((field) => {
+    formData.append(field, listing[field] || '');
   });
 
-  const { data, error } = await supabase.from(LISTINGS_TABLE).insert(dbListing).select('*').single();
+  (listing.imageFiles || []).forEach((file) => {
+    formData.append('images', file);
+  });
 
-  if (error) {
-    throw new Error(`İlan kaydedilemedi: ${error.message}`);
+  const response = await fetch('/api/listings', {
+    method: 'POST',
+    body: formData,
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Ilan gonderilemedi.');
   }
 
-  return fromDbListing(data);
+  return fromDbListing(payload.listing);
 }
 
 export async function updateListingStatus(listingId, status) {
@@ -212,7 +145,7 @@ export async function updateListingStatus(listingId, status) {
 
   const allowedStatuses = ['pending', 'approved', 'rejected', 'spam'];
   if (!allowedStatuses.includes(status)) {
-    throw new Error('Geçersiz ilan durumu.');
+    throw new Error('Gecersiz ilan durumu.');
   }
 
   const { data, error } = await supabase
@@ -223,7 +156,7 @@ export async function updateListingStatus(listingId, status) {
     .single();
 
   if (error) {
-    throw new Error(`İlan durumu güncellenemedi: ${error.message}`);
+    throw new Error(`Ilan durumu guncellenemedi: ${error.message}`);
   }
 
   return fromDbListing(data);
@@ -232,9 +165,23 @@ export async function updateListingStatus(listingId, status) {
 export async function deleteListing(listingId) {
   assertSupabaseConfigured();
 
-  const { error } = await supabase.from(LISTINGS_TABLE).delete().eq('id', listingId);
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    throw new Error('Admin oturumu bulunamadi.');
+  }
 
-  if (error) {
-    throw new Error(`İlan silinemedi: ${error.message}`);
+  const response = await fetch('/api/admin-delete-listing', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ listingId }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Ilan silinemedi.');
   }
 }
