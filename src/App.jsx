@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Header from './components/Header.jsx';
 import Footer from './components/Footer.jsx';
 import HomePage from './pages/HomePage.jsx';
@@ -114,6 +114,9 @@ export default function App() {
   const [profile, setProfile] = useState(null);
   const [authNotice, setAuthNotice] = useState('');
   const [profileNotice, setProfileNotice] = useState('');
+  const [logoutError, setLogoutError] = useState('');
+  const [loggingOut, setLoggingOut] = useState(false);
+  const profileRequestId = useRef(0);
 
   const loadSupabaseListings = async () => {
     setLoadingListings(true);
@@ -131,7 +134,10 @@ export default function App() {
 
   const refreshAuth = async () => {
     const currentSession = await getSession().catch(() => null);
-    const currentProfile = currentSession ? await fetchProfile().catch(() => null) : null;
+    const requestId = profileRequestId.current + 1;
+    profileRequestId.current = requestId;
+    const currentProfile = currentSession?.user?.id ? await fetchProfile(currentSession.user.id).catch(() => null) : null;
+    if (requestId !== profileRequestId.current) return { session: null, profile: null };
     setSession(currentSession);
     setProfile(currentProfile);
     return { session: currentSession, profile: currentProfile };
@@ -140,9 +146,25 @@ export default function App() {
   useEffect(() => {
     loadSupabaseListings();
     refreshAuth();
-    return onAuthChange(async (nextSession) => {
+    return onAuthChange((_event, nextSession) => {
+      const requestId = profileRequestId.current + 1;
+      profileRequestId.current = requestId;
       setSession(nextSession);
-      setProfile(nextSession ? await fetchProfile().catch(() => null) : null);
+      setLogoutError('');
+
+      if (!nextSession?.user?.id) {
+        setProfile(null);
+        setAuthNotice('');
+        setProfileNotice('');
+        return;
+      }
+
+      window.setTimeout(async () => {
+        const nextProfile = await fetchProfile(nextSession.user.id).catch(() => null);
+        if (requestId === profileRequestId.current) {
+          setProfile(nextProfile);
+        }
+      }, 0);
     });
   }, []);
 
@@ -193,10 +215,27 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await signOutUser();
-    setSession(null);
-    setProfile(null);
-    goTo('anasayfa');
+    if (loggingOut) return;
+
+    setLoggingOut(true);
+    setLogoutError('');
+
+    try {
+      await signOutUser();
+      profileRequestId.current += 1;
+      setSession(null);
+      setProfile(null);
+      setAuthNotice('');
+      setProfileNotice('');
+      window.history.replaceState(null, '', '/');
+      setSelectedListingId('');
+      setPage('anasayfa');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch {
+      setLogoutError('Çıkış yapılamadı. Lütfen tekrar deneyin.');
+    } finally {
+      setLoggingOut(false);
+    }
   };
 
   const openListing = (listingId) => {
@@ -323,15 +362,20 @@ export default function App() {
     }
 
     return <HomePage onNavigate={goTo} />;
-  }, [page, listings, selectedListing, loadingListings, listingsError, storageMessage, session, profile, authNotice]);
+  }, [page, listings, selectedListing, loadingListings, listingsError, storageMessage, session, profile, authNotice, profileNotice]);
 
   return (
     <div className="min-h-screen bg-cream text-navy">
       <SEO {...seo} />
-      <Header currentPage={page} onNavigate={goTo} user={session?.user} onLogout={handleLogout} />
+      <Header currentPage={page} onNavigate={goTo} user={session?.user} onLogout={handleLogout} signingOut={loggingOut} />
       {storageMessage && (
         <div className="border-b border-turco/10 bg-blush px-4 py-3 text-center text-sm font-extrabold text-turco">
           {storageMessage}
+        </div>
+      )}
+      {logoutError && (
+        <div className="border-b border-turco/10 bg-blush px-4 py-3 text-center text-sm font-extrabold text-turco">
+          {logoutError}
         </div>
       )}
       <main>

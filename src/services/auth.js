@@ -15,14 +15,12 @@ export async function getSession() {
 
 export function onAuthChange(callback) {
   if (!isSupabaseConfigured || !supabase) return () => {};
-  const { data } = supabase.auth.onAuthStateChange((_event, session) => callback(session));
+  const { data } = supabase.auth.onAuthStateChange((event, session) => callback(event, session));
   return () => data.subscription.unsubscribe();
 }
 
-export async function fetchProfile() {
+export async function fetchProfile(userId) {
   assertSupabaseConfigured();
-  const { data: sessionData } = await supabase.auth.getSession();
-  const userId = sessionData.session?.user?.id;
   if (!userId) return null;
 
   const { data, error } = await supabase

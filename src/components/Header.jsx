@@ -9,7 +9,7 @@ const navItems = [
   { id: 'nasil-calisir', label: 'Nasıl Çalışır' },
 ];
 
-export default function Header({ currentPage, onNavigate, user, onLogout }) {
+export default function Header({ currentPage, onNavigate, user, onLogout, signingOut = false }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -23,6 +23,11 @@ export default function Header({ currentPage, onNavigate, user, onLogout }) {
   const selectPage = (page) => {
     onNavigate(page);
     setOpen(false);
+  };
+
+  const handleLogoutClick = () => {
+    setOpen(false);
+    onLogout?.();
   };
 
   const accountItems = user
@@ -81,8 +86,13 @@ export default function Header({ currentPage, onNavigate, user, onLogout }) {
             </button>
           ))}
           {user && (
-            <button type="button" onClick={onLogout} className="rounded-full bg-navy px-4 py-2.5 text-sm font-extrabold text-white shadow-sm">
-              Çıkış Yap
+            <button
+              type="button"
+              onClick={handleLogoutClick}
+              disabled={signingOut}
+              className="rounded-full bg-navy px-4 py-2.5 text-sm font-extrabold text-white shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {signingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
             </button>
           )}
         </div>
@@ -122,8 +132,13 @@ export default function Header({ currentPage, onNavigate, user, onLogout }) {
                 </button>
               ))}
               {user && (
-                <button type="button" onClick={onLogout} className="rounded-2xl px-4 py-3 text-left text-sm font-extrabold text-turco transition hover:bg-blush">
-                  Çıkış Yap
+                <button
+                  type="button"
+                  onClick={handleLogoutClick}
+                  disabled={signingOut}
+                  className="rounded-2xl px-4 py-3 text-left text-sm font-extrabold text-turco transition hover:bg-blush disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {signingOut ? 'Çıkış yapılıyor...' : 'Çıkış Yap'}
                 </button>
               )}
             </div>
