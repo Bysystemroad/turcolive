@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { Redis } from '@upstash/redis';
 import {
   getClientIp,
   getSupabaseAdmin,
@@ -17,33 +19,155 @@ const FILE_EXTENSIONS = {
   'image/webp': 'webp',
 };
 const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const RATE_LIMIT_WINDOW_SECONDS = 24 * 60 * 60;
 const RATE_LIMIT_MAX = 2;
-const RATE_LIMIT_MESSAGE = 'Günlük ilan gönderme sınırına ulaştınız.';
+const RATE_LIMIT_MESSAGE = 'Günlük ilan gönderme sınırına ulaştınız. Yeni bir ilan göndermek için lütfen 24 saat bekleyin.';
+const RATE_LIMIT_CLAIM_SCRIPT = `
+local current = tonumber(redis.call("GET", KEYS[1]) or "0")
+if current >= tonumber(ARGV[1]) then
+  local ttl = redis.call("PTTL", KEYS[1])
+  return {0, current, ttl}
+end
+current = redis.call("INCR", KEYS[1])
+if current == 1 then
+  redis.call("PEXPIRE", KEYS[1], ARGV[2])
+end
+local ttl = redis.call("PTTL", KEYS[1])
+return {1, current, ttl}
+`;
 
-// Temporary in-memory fallback only. Vercel serverless instances do not share this Map,
-// so replace these helpers with a persistent Redis-backed store before relying on this in production.
-const rateLimitStore = new Map();
+// Emergency fallback only. Vercel serverless instances do not share this Map,
+// so Redis is the production limiter and this only softens failures if Redis is unavailable.
+const fallbackRateLimitStore = new Map();
+let redisClient;
+let rateLimitClaimScript;
 
-function getRateLimitRecord(ip) {
+function getRedisClient() {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+
+  if (!redisClient) {
+    redisClient = Redis.fromEnv();
+  }
+
+  return redisClient;
+}
+
+function getRateLimitClaimScript() {
+  const redis = getRedisClient();
+  if (!redis) return null;
+
+  if (!rateLimitClaimScript) {
+    rateLimitClaimScript = redis.createScript(RATE_LIMIT_CLAIM_SCRIPT);
+  }
+
+  return rateLimitClaimScript;
+}
+
+function hashIp(ip) {
+  return createHash('sha256').update(String(ip || 'unknown')).digest('hex').slice(0, 32);
+}
+
+function getRateLimitKey(ip) {
+  return `turcolive:listing-submit:${hashIp(ip)}`;
+}
+
+function retryAfterFromMs(milliseconds) {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) return RATE_LIMIT_WINDOW_SECONDS;
+  return Math.max(1, Math.ceil(milliseconds / 1000));
+}
+
+function setRetryAfter(res, retryAfterSeconds) {
+  res.setHeader('Retry-After', String(retryAfterSeconds || RATE_LIMIT_WINDOW_SECONDS));
+}
+
+function getFallbackRecord(ip) {
   const now = Date.now();
-  const current = rateLimitStore.get(ip);
+  const key = getRateLimitKey(ip);
+  const current = fallbackRateLimitStore.get(key);
 
   if (!current || current.resetAt <= now) {
     const next = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
-    rateLimitStore.set(ip, next);
+    fallbackRateLimitStore.set(key, next);
     return next;
   }
 
   return current;
 }
 
-function isRateLimited(ip) {
-  return getRateLimitRecord(ip).count >= RATE_LIMIT_MAX;
+function getFallbackStatus(ip) {
+  const record = getFallbackRecord(ip);
+  return {
+    limited: record.count >= RATE_LIMIT_MAX,
+    retryAfterSeconds: retryAfterFromMs(record.resetAt - Date.now()),
+    source: 'memory-fallback',
+  };
 }
 
-function recordSuccessfulSubmission(ip) {
-  const record = getRateLimitRecord(ip);
+function claimFallbackSuccessfulSubmission(ip) {
+  const record = getFallbackRecord(ip);
+
+  if (record.count >= RATE_LIMIT_MAX) {
+    return {
+      allowed: false,
+      retryAfterSeconds: retryAfterFromMs(record.resetAt - Date.now()),
+      source: 'memory-fallback',
+    };
+  }
+
   record.count += 1;
+  return {
+    allowed: true,
+    retryAfterSeconds: retryAfterFromMs(record.resetAt - Date.now()),
+    source: 'memory-fallback',
+  };
+}
+
+async function getPersistentStatus(ip) {
+  const redis = getRedisClient();
+  if (!redis) return null;
+
+  try {
+    const key = getRateLimitKey(ip);
+    const [count, ttlMs] = await Promise.all([redis.get(key), redis.pttl(key)]);
+    const numericCount = Number(count || 0);
+
+    return {
+      limited: numericCount >= RATE_LIMIT_MAX,
+      retryAfterSeconds: retryAfterFromMs(Number(ttlMs)),
+      source: 'redis',
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function getRateLimitStatus(ip) {
+  return (await getPersistentStatus(ip)) || getFallbackStatus(ip);
+}
+
+async function claimPersistentSuccessfulSubmission(ip) {
+  const script = getRateLimitClaimScript();
+  if (!script) return null;
+
+  try {
+    const key = getRateLimitKey(ip);
+    const result = await script.eval([key], [String(RATE_LIMIT_MAX), String(RATE_LIMIT_WINDOW_MS)]);
+    const [allowed, , ttlMs] = Array.isArray(result) ? result.map(Number) : [0, 0, RATE_LIMIT_WINDOW_MS];
+
+    return {
+      allowed: allowed === 1,
+      retryAfterSeconds: retryAfterFromMs(ttlMs),
+      source: 'redis',
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function claimSuccessfulSubmission(ip) {
+  return (await claimPersistentSuccessfulSubmission(ip)) || claimFallbackSuccessfulSubmission(ip);
 }
 
 function requiredText(formData, key) {
@@ -168,6 +292,12 @@ async function cleanupUploadedImages(supabase, uploadedImages) {
   }
 }
 
+async function cleanupInsertedListing(supabase, listingId) {
+  if (listingId) {
+    await supabase.from(LISTINGS_TABLE).delete().eq('id', listingId);
+  }
+}
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     sendJson(res, 405, { error: 'Method not allowed' });
@@ -175,12 +305,16 @@ export default async function handler(req, res) {
   }
 
   const ip = getClientIp(req);
-  if (isRateLimited(ip)) {
+  const rateLimitStatus = await getRateLimitStatus(ip);
+
+  if (rateLimitStatus.limited) {
+    setRetryAfter(res, rateLimitStatus.retryAfterSeconds);
     sendJson(res, 429, { error: RATE_LIMIT_MESSAGE });
     return;
   }
 
   let uploadedImages = [];
+  let insertedListingId = '';
 
   try {
     const supabase = getSupabaseAdmin();
@@ -201,7 +335,17 @@ export default async function handler(req, res) {
       throw new Error(`İlan kaydedilemedi: ${error.message}`);
     }
 
-    recordSuccessfulSubmission(ip);
+    insertedListingId = data.id;
+    const claim = await claimSuccessfulSubmission(ip);
+
+    if (!claim.allowed) {
+      await cleanupInsertedListing(supabase, insertedListingId);
+      await cleanupUploadedImages(supabase, uploadedImages);
+      setRetryAfter(res, claim.retryAfterSeconds);
+      sendJson(res, 429, { error: RATE_LIMIT_MESSAGE });
+      return;
+    }
+
     sendJson(res, 201, { listing: data });
   } catch (error) {
     if (uploadedImages.length > 0) {
