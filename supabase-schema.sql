@@ -121,16 +121,11 @@ drop policy if exists "Listing photos are publicly readable" on storage.objects;
 drop policy if exists "Anyone can upload listing photos" on storage.objects;
 drop policy if exists "Public can upload listing images" on storage.objects;
 drop policy if exists "Public can read listing photos" on storage.objects;
+drop policy if exists "Public can view photos" on storage.objects;
+drop policy if exists "Public can upload photos" on storage.objects;
 
-drop policy if exists "Public can read listing photos" on storage.objects;
-
-create policy "Public can read listing photos"
-  on storage.objects
-  for select
-  to anon, authenticated
-  using (bucket_id = 'listing-photos');
-
--- No public storage insert/update/delete policies are created.
+-- No public storage select/insert/update/delete policies are created.
+-- The listing-photos bucket remains public for direct public URL viewing.
 -- Listing photo uploads are handled only by Vercel Functions with SUPABASE_SERVICE_ROLE_KEY.
 
 -- After creating an admin user in Supabase Auth, run this with the real values:
