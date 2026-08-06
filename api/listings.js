@@ -16,23 +16,34 @@ const FILE_EXTENSIONS = {
   'image/png': 'png',
   'image/webp': 'webp',
 };
-const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000;
-const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 24 * 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 2;
+const RATE_LIMIT_MESSAGE = 'Günlük ilan gönderme sınırına ulaştınız.';
+
+// Temporary in-memory fallback only. Vercel serverless instances do not share this Map,
+// so replace these helpers with a persistent Redis-backed store before relying on this in production.
 const rateLimitStore = new Map();
 
-function checkRateLimit(ip) {
+function getRateLimitRecord(ip) {
   const now = Date.now();
   const current = rateLimitStore.get(ip);
 
   if (!current || current.resetAt <= now) {
-    rateLimitStore.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
-    return true;
+    const next = { count: 0, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    rateLimitStore.set(ip, next);
+    return next;
   }
 
-  if (current.count >= RATE_LIMIT_MAX_REQUESTS) return false;
+  return current;
+}
 
-  current.count += 1;
-  return true;
+function isRateLimited(ip) {
+  return getRateLimitRecord(ip).count >= RATE_LIMIT_MAX;
+}
+
+function recordSuccessfulSubmission(ip) {
+  const record = getRateLimitRecord(ip);
+  record.count += 1;
 }
 
 function requiredText(formData, key) {
@@ -164,8 +175,8 @@ export default async function handler(req, res) {
   }
 
   const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
-    sendJson(res, 429, { error: 'Çok fazla deneme yapıldı. Lütfen daha sonra tekrar deneyin.' });
+  if (isRateLimited(ip)) {
+    sendJson(res, 429, { error: RATE_LIMIT_MESSAGE });
     return;
   }
 
@@ -190,6 +201,7 @@ export default async function handler(req, res) {
       throw new Error(`İlan kaydedilemedi: ${error.message}`);
     }
 
+    recordSuccessfulSubmission(ip);
     sendJson(res, 201, { listing: data });
   } catch (error) {
     if (uploadedImages.length > 0) {
