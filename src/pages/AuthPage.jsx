@@ -39,8 +39,11 @@ export default function AuthPage({ mode, notice = '', onNavigate, onAuthSuccess 
         onNavigate('giris');
       } else {
         await signInUser({ email: form.email.trim(), password: form.password });
-        await onAuthSuccess?.();
-        onNavigate('hesabim');
+        if (onAuthSuccess) {
+          await onAuthSuccess();
+        } else {
+          onNavigate('ilanlarim');
+        }
       }
     } catch (submitError) {
       setError(submitError.message || 'İşlem tamamlanamadı.');

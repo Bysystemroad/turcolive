@@ -113,6 +113,7 @@ export default function App() {
   const [session, setSession] = useState(null);
   const [profile, setProfile] = useState(null);
   const [authNotice, setAuthNotice] = useState('');
+  const [profileNotice, setProfileNotice] = useState('');
 
   const loadSupabaseListings = async () => {
     setLoadingListings(true);
@@ -130,8 +131,10 @@ export default function App() {
 
   const refreshAuth = async () => {
     const currentSession = await getSession().catch(() => null);
+    const currentProfile = currentSession ? await fetchProfile().catch(() => null) : null;
     setSession(currentSession);
-    setProfile(currentSession ? await fetchProfile().catch(() => null) : null);
+    setProfile(currentProfile);
+    return { session: currentSession, profile: currentProfile };
   };
 
   useEffect(() => {
@@ -166,10 +169,19 @@ export default function App() {
       return;
     }
 
+    if (nextPage === 'ilan-ver' && session?.user && !isProfileComplete(profile)) {
+      setProfileNotice('İlan vermeden önce profil bilgilerinizi tamamlayın.');
+      window.history.pushState(null, '', '/hesabim');
+      setPage('hesabim');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     const nextPath = staticSeo[nextPage]?.path || pathForPage(nextPage);
     window.history.pushState(null, '', nextPath);
     setPage(nextPage);
     setAuthNotice('');
+    if (nextPage !== 'hesabim') setProfileNotice('');
 
     if (nextPage === 'nasil-calisir') {
       window.setTimeout(() => {
@@ -236,6 +248,19 @@ export default function App() {
         return <section className="bg-porcelain px-4 py-20 text-center text-lg font-black text-turco">Hesabınız ilan paylaşımına kapatılmıştır.</section>;
       }
 
+      if (!isProfileComplete(profile)) {
+        return (
+          <AccountPage
+            user={session.user}
+            profile={profile}
+            notice="İlan vermeden önce profil bilgilerinizi tamamlayın."
+            requiresCompletion
+            onNavigate={goTo}
+            onProfileUpdated={refreshAuth}
+          />
+        );
+      }
+
       return (
         <SubmitPage
           onSubmit={async (listing) => {
@@ -247,10 +272,38 @@ export default function App() {
 
     if (page === 'admin') return <AdminPage />;
     if (page === 'kayit-ol') return <AuthPage mode="signup" onNavigate={goTo} onAuthSuccess={refreshAuth} />;
-    if (page === 'giris') return <AuthPage mode="login" notice={authNotice} onNavigate={goTo} onAuthSuccess={refreshAuth} />;
+    if (page === 'giris') {
+      return (
+        <AuthPage
+          mode="login"
+          notice={authNotice}
+          onNavigate={goTo}
+          onAuthSuccess={async () => {
+            const authState = await refreshAuth();
+            if (isProfileComplete(authState.profile)) {
+              goTo('ilanlarim');
+            } else {
+              setProfileNotice('İlan vermeden önce profil bilgilerinizi tamamlayın.');
+              goTo('hesabim');
+            }
+          }}
+        />
+      );
+    }
     if (page === 'sifremi-unuttum') return <AuthPage mode="forgot" onNavigate={goTo} />;
     if (page === 'sifre-yenile') return <AuthPage mode="reset" onNavigate={goTo} />;
-    if (page === 'hesabim') return <AccountPage user={session?.user} profile={profile} onNavigate={goTo} onProfileUpdated={refreshAuth} />;
+    if (page === 'hesabim') {
+      return (
+        <AccountPage
+          user={session?.user}
+          profile={profile}
+          notice={profileNotice}
+          requiresCompletion={!isProfileComplete(profile)}
+          onNavigate={goTo}
+          onProfileUpdated={refreshAuth}
+        />
+      );
+    }
     if (page === 'ilanlarim') return <MyListingsPage user={session?.user} onNavigate={goTo} />;
 
     if (staticPages.includes(page)) return <StaticPage pageId={page} />;
@@ -295,6 +348,12 @@ export default function App() {
       <Footer />
     </div>
   );
+}
+
+function isProfileComplete(profile) {
+  const fullName = String(profile?.full_name || '').trim();
+  const phone = String(profile?.phone || '').trim();
+  return Boolean(fullName && phone && phone.startsWith('+'));
 }
 
 function pathForPage(page) {

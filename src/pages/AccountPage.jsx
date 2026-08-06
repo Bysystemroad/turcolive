@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabaseClient.js';
 
-export default function AccountPage({ user, profile, onNavigate, onProfileUpdated }) {
+export default function AccountPage({ user, profile, notice = '', requiresCompletion = false, onNavigate, onProfileUpdated }) {
   const [fullName, setFullName] = useState(profile?.full_name || '');
   const [phone, setPhone] = useState(profile?.phone || '');
   const [message, setMessage] = useState('');
@@ -9,6 +9,11 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
   const [saving, setSaving] = useState(false);
 
   const verified = Boolean(user?.email_confirmed_at);
+
+  useEffect(() => {
+    setFullName(profile?.full_name || '');
+    setPhone(profile?.phone || '');
+  }, [profile?.full_name, profile?.phone]);
 
   const handlePhoneChange = (value) => {
     setPhone(value.replace(/[^\d+\s]/g, ''));
@@ -19,6 +24,18 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
     if (saving) return;
 
     const normalizedPhone = phone.trim();
+    if (!fullName.trim()) {
+      setError('Ad soyad alanı zorunludur.');
+      setMessage('');
+      return;
+    }
+
+    if (!normalizedPhone) {
+      setError('Telefon alanı zorunludur.');
+      setMessage('');
+      return;
+    }
+
     if (normalizedPhone && !normalizedPhone.startsWith('+')) {
       setError('Telefon numaranızı ülke koduyla birlikte girin.');
       setMessage('');
@@ -37,15 +54,17 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
           Authorization: `Bearer ${sessionData.session?.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, phone: normalizedPhone }),
+        body: JSON.stringify({ fullName: fullName.trim(), phone: normalizedPhone }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Profil güncellenemedi.');
       await onProfileUpdated?.();
       setMessage('Profiliniz başarıyla kaydedildi.');
-      window.setTimeout(() => {
-        onNavigate('ilan-ver');
-      }, 900);
+      if (requiresCompletion) {
+        window.setTimeout(() => {
+          onNavigate('ilan-ver');
+        }, 900);
+      }
     } catch (saveError) {
       setError(saveError.message || 'Profil güncellenemedi.');
     } finally {
@@ -68,6 +87,11 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
         <div className="premium-surface rounded-[2.5rem] border border-white/80 p-6 shadow-card ring-1 ring-navy/5 sm:p-8">
           <p className="text-sm font-black uppercase tracking-[0.2em] text-turco">Hesabım</p>
           <h1 className="mt-3 text-4xl font-black tracking-tight text-navy">Profil bilgileriniz</h1>
+          {notice && (
+            <div className="mt-6 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10">
+              {notice}
+            </div>
+          )}
           {!verified && (
             <div className="mt-6 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco ring-1 ring-turco/10">
               İlan vermek için e-posta adresinizi doğrulamalısınız.
