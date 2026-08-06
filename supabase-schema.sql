@@ -74,12 +74,15 @@ drop policy if exists "Admins can read all listings" on public.listings;
 drop policy if exists "Admins can update listings" on public.listings;
 drop policy if exists "Admins can delete listings" on public.listings;
 drop policy if exists "Public can create pending listings" on public.listings;
+drop policy if exists "Public can read approved listings" on public.listings;
 
 create policy "Public can read approved listings"
   on public.listings
   for select
   to anon, authenticated
   using (status = 'approved' or public.is_turcolive_admin());
+
+drop policy if exists "Admins can update listings" on public.listings;
 
 create policy "Admins can update listings"
   on public.listings
@@ -91,6 +94,8 @@ create policy "Admins can update listings"
     and status in ('pending', 'approved', 'rejected', 'spam')
   );
 
+drop policy if exists "Admins can delete listings" on public.listings;
+
 create policy "Admins can delete listings"
   on public.listings
   for delete
@@ -99,6 +104,8 @@ create policy "Admins can delete listings"
 
 drop policy if exists "Admin users can read own record" on public.admin_users;
 drop policy if exists "Admins can read admin users" on public.admin_users;
+
+drop policy if exists "Admin users can read own record" on public.admin_users;
 
 create policy "Admin users can read own record"
   on public.admin_users
@@ -113,6 +120,8 @@ on conflict (id) do update set public = true;
 drop policy if exists "Listing photos are publicly readable" on storage.objects;
 drop policy if exists "Anyone can upload listing photos" on storage.objects;
 drop policy if exists "Public can upload listing images" on storage.objects;
+drop policy if exists "Public can read listing photos" on storage.objects;
+
 drop policy if exists "Public can read listing photos" on storage.objects;
 
 create policy "Public can read listing photos"
