@@ -10,6 +10,10 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
 
   const verified = Boolean(user?.email_confirmed_at);
 
+  const handlePhoneChange = (value) => {
+    setPhone(value.replace(/[^\d+\s]/g, ''));
+  };
+
   const saveProfile = async (event) => {
     event.preventDefault();
     setSaving(true);
@@ -17,6 +21,11 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
     setMessage('');
 
     try {
+      const normalizedPhone = phone.trim();
+      if (normalizedPhone && !normalizedPhone.startsWith('+')) {
+        throw new Error('Telefon numaranızı ülke koduyla birlikte girin.');
+      }
+
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch('/api/update-profile', {
         method: 'POST',
@@ -24,7 +33,7 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
           Authorization: `Bearer ${sessionData.session?.access_token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ fullName, phone }),
+        body: JSON.stringify({ fullName, phone: normalizedPhone }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Profil güncellenemedi.');
@@ -70,7 +79,16 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
             </label>
             <label className="grid gap-2">
               <span className="label">Telefon</span>
-              <input className="field" value={phone} onChange={(event) => setPhone(event.target.value)} />
+              <input
+                className="field"
+                value={phone}
+                placeholder="+39 345 123 4567"
+                inputMode="tel"
+                onChange={(event) => handlePhoneChange(event.target.value)}
+              />
+              <span className="text-xs font-bold leading-5 text-navy/55">
+                Telefon numaranızı ülke koduyla birlikte girin. Örnek: +39 345 123 4567
+              </span>
             </label>
             <label className="grid gap-2 sm:col-span-2">
               <span className="label">E-posta</span>
