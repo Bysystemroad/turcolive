@@ -41,14 +41,35 @@ return {1, current, ttl}
 const fallbackRateLimitStore = new Map();
 let redisClient;
 let rateLimitClaimScript;
+let redisConfigurationLogged = false;
+
+function getRedisCredentials() {
+  const redisUrl = process.env.UPSTASH_REDIS_KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const redisToken = process.env.UPSTASH_REDIS_KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  return { redisUrl, redisToken };
+}
+
+function logRedisConfigurationStatus(isConfigured) {
+  if (redisConfigurationLogged) return;
+  redisConfigurationLogged = true;
+  console.info(`Redis rate limiter configured: ${Boolean(isConfigured)}`);
+}
 
 function getRedisClient() {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  const { redisUrl, redisToken } = getRedisCredentials();
+  const isConfigured = Boolean(redisUrl && redisToken);
+  logRedisConfigurationStatus(isConfigured);
+
+  if (!isConfigured) {
     return null;
   }
 
   if (!redisClient) {
-    redisClient = Redis.fromEnv();
+    redisClient = new Redis({
+      url: redisUrl,
+      token: redisToken,
+    });
   }
 
   return redisClient;
