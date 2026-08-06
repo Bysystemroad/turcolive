@@ -16,16 +16,20 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
 
   const saveProfile = async (event) => {
     event.preventDefault();
+    if (saving) return;
+
+    const normalizedPhone = phone.trim();
+    if (normalizedPhone && !normalizedPhone.startsWith('+')) {
+      setError('Telefon numaranızı ülke koduyla birlikte girin.');
+      setMessage('');
+      return;
+    }
+
     setSaving(true);
     setError('');
     setMessage('');
 
     try {
-      const normalizedPhone = phone.trim();
-      if (normalizedPhone && !normalizedPhone.startsWith('+')) {
-        throw new Error('Telefon numaranızı ülke koduyla birlikte girin.');
-      }
-
       const { data: sessionData } = await supabase.auth.getSession();
       const response = await fetch('/api/update-profile', {
         method: 'POST',
@@ -38,7 +42,10 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(payload.error || 'Profil güncellenemedi.');
       await onProfileUpdated?.();
-      setMessage('Profiliniz güncellendi.');
+      setMessage('Profiliniz başarıyla kaydedildi.');
+      window.setTimeout(() => {
+        onNavigate('ilan-ver');
+      }, 900);
     } catch (saveError) {
       setError(saveError.message || 'Profil güncellenemedi.');
     } finally {
@@ -94,7 +101,7 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
             {message && <p className="text-sm font-extrabold text-emerald-700 sm:col-span-2">{message}</p>}
             {error && <p className="text-sm font-extrabold text-turco sm:col-span-2">{error}</p>}
             <div className="flex flex-wrap gap-3 sm:col-span-2">
-              <button className="premium-button" disabled={saving}>{saving ? 'Kaydediliyor' : 'Profili Kaydet'}</button>
+              <button className="premium-button" disabled={saving}>{saving ? 'Kaydediliyor...' : 'Profili Kaydet'}</button>
               <button type="button" className="rounded-full bg-white px-6 py-3 text-sm font-black text-navy shadow-sm ring-1 ring-navy/10" onClick={() => onNavigate('ilanlarim')}>
                 İlanlarım
               </button>
