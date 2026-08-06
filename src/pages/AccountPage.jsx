@@ -86,9 +86,6 @@ export default function AccountPage({ user, profile, onNavigate, onProfileUpdate
                 inputMode="tel"
                 onChange={(event) => handlePhoneChange(event.target.value)}
               />
-              <span className="text-xs font-bold leading-5 text-navy/55">
-                Telefon numaranızı ülke koduyla birlikte girin. Örnek: +39 345 123 4567
-              </span>
             </label>
             <label className="grid gap-2 sm:col-span-2">
               <span className="label">E-posta</span>
