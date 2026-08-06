@@ -93,6 +93,55 @@ export async function requireAdminUser(req) {
   return userData.user;
 }
 
+export async function requireAuthenticatedUser(req) {
+  const authorization = req.headers.authorization || '';
+  const token = authorization.startsWith('Bearer ') ? authorization.slice(7) : '';
+
+  if (!token) {
+    const error = new Error('İlan vermek için giriş yapmalısınız.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const supabase = getSupabaseAdmin();
+  const { data: userData, error: userError } = await supabase.auth.getUser(token);
+
+  if (userError || !userData.user) {
+    const error = new Error('Oturum doğrulanamadı.');
+    error.statusCode = 401;
+    throw error;
+  }
+
+  return userData.user;
+}
+
+export async function getProfileForUser(userId) {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id,full_name,email,phone,is_blocked')
+    .eq('id', userId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Profil kontrol edilemedi: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function readJson(req) {
+  const chunks = [];
+
+  for await (const chunk of req) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  if (chunks.length === 0) return {};
+
+  return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+}
+
 export function getStoragePathFromPublicUrl(publicUrl) {
   try {
     const url = new URL(publicUrl);

@@ -2,10 +2,12 @@ import { createHash } from 'node:crypto';
 import { Redis } from '@upstash/redis';
 import {
   getClientIp,
+  getProfileForUser,
   getSupabaseAdmin,
   LISTING_PHOTOS_BUCKET,
   LISTINGS_TABLE,
   readMultipartFormData,
+  requireAuthenticatedUser,
   sendJson,
 } from './_supabaseAdmin.js';
 
@@ -195,8 +197,10 @@ function requiredText(formData, key) {
   return String(formData.get(key) || '').trim();
 }
 
-function validateListingPayload(formData) {
+function validateListingPayload(formData, user, profile) {
   const listing = {
+    user_id: user.id,
+    owner_email: user.email || profile?.email || '',
     full_name: requiredText(formData, 'fullName'),
     title: requiredText(formData, 'title'),
     city: requiredText(formData, 'city'),
@@ -339,10 +343,30 @@ export default async function handler(req, res) {
 
   try {
     const supabase = getSupabaseAdmin();
+    const user = await requireAuthenticatedUser(req);
+    const userRateLimitStatus = await getRateLimitStatus(`user:${user.id}`);
+
+    if (userRateLimitStatus.limited) {
+      setRetryAfter(res, userRateLimitStatus.retryAfterSeconds);
+      sendJson(res, 429, { error: RATE_LIMIT_MESSAGE });
+      return;
+    }
+
+    if (!user.email_confirmed_at) {
+      sendJson(res, 403, { error: 'İlan vermek için e-posta adresinizi doğrulamalısınız.' });
+      return;
+    }
+
+    const profile = await getProfileForUser(user.id);
+    if (profile?.is_blocked) {
+      sendJson(res, 403, { error: 'Hesabınız ilan paylaşımına kapatılmıştır.' });
+      return;
+    }
+
     const formData = await readMultipartFormData(req);
     await verifyCaptcha(requiredText(formData, 'captchaToken'), ip);
 
-    const listing = validateListingPayload(formData);
+    const listing = validateListingPayload(formData, user, profile);
     const imageFiles = getImageFiles(formData);
     validateImageFiles(imageFiles);
 
@@ -358,11 +382,12 @@ export default async function handler(req, res) {
 
     insertedListingId = data.id;
     const claim = await claimSuccessfulSubmission(ip);
+    const userClaim = claim.allowed ? await claimSuccessfulSubmission(`user:${user.id}`) : claim;
 
-    if (!claim.allowed) {
+    if (!claim.allowed || !userClaim.allowed) {
       await cleanupInsertedListing(supabase, insertedListingId);
       await cleanupUploadedImages(supabase, uploadedImages);
-      setRetryAfter(res, claim.retryAfterSeconds);
+      setRetryAfter(res, claim.allowed ? userClaim.retryAfterSeconds : claim.retryAfterSeconds);
       sendJson(res, 429, { error: RATE_LIMIT_MESSAGE });
       return;
     }

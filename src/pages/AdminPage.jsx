@@ -2,7 +2,8 @@ import { motion } from 'framer-motion';
 import { CheckCircle2, LogOut, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { getCurrentAdminUser, signInAdmin, signOutAdmin } from '../services/adminAuth.js';
-import { deleteListing, fetchListings, updateListingStatus } from '../services/listings.js';
+import { deleteListing, fetchAdminListings, updateListingStatus } from '../services/listings.js';
+import { setUserBlocked } from '../services/adminUsers.js';
 
 const statusLabels = {
   pending: 'Beklemede',
@@ -38,7 +39,7 @@ export default function AdminPage() {
   const loadAdminListings = async () => {
     setLoading(true);
     try {
-      const data = await fetchListings({ includePending: true });
+      const data = await fetchAdminListings();
       setListings(data);
       setMessage('');
     } catch (error) {
@@ -135,6 +136,23 @@ export default function AdminPage() {
       setMessage('');
     } catch (error) {
       setMessage(error.message || 'İlan silinemedi.');
+    }
+  };
+
+  const handleBlockUser = async (listing, isBlocked) => {
+    if (!listing.userId) return;
+    if (isBlocked && !window.confirm('Bu kullanıcıyı ilan paylaşımına kapatmak istediğinize emin misiniz?')) return;
+
+    const previousListings = listings;
+    setListings((current) =>
+      current.map((item) => (item.userId === listing.userId ? { ...item, ownerBlocked: isBlocked } : item))
+    );
+
+    try {
+      await setUserBlocked(listing.userId, isBlocked);
+    } catch (error) {
+      setListings(previousListings);
+      setMessage(error.message || 'Kullanıcı durumu güncellenemedi.');
     }
   };
 
@@ -273,6 +291,14 @@ export default function AdminPage() {
                       <p className="mt-1 text-xs font-black text-navy/45">
                         {listing.imageUrls?.length || 0} fotoğraf
                       </p>
+                      <p className="mt-2 text-xs font-bold text-navy/50">
+                        Sahip: {listing.ownerName || listing.fullName || 'Bilinmiyor'} · {listing.ownerEmail || 'E-posta yok'}
+                      </p>
+                      {listing.userId && (
+                        <p className="mt-1 text-xs font-bold text-navy/45">
+                          user_id: {listing.userId} · {listing.ownerBlocked ? 'Engelli' : 'Aktif'}
+                        </p>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2 lg:justify-end">
                       {status !== 'approved' && (
@@ -295,8 +321,28 @@ export default function AdminPage() {
                         <ActionButton
                           label="Spam"
                           icon={ShieldAlert}
-                          onClick={() => handleStatusChange(listing.id, 'spam')}
+                          onClick={() => {
+                            if (window.confirm('Bu ilan spam olarak işaretlensin mi?')) {
+                              handleStatusChange(listing.id, 'spam');
+                            }
+                          }}
                           className="bg-navy text-white ring-navy/10"
+                        />
+                      )}
+                      {listing.userId && !listing.ownerBlocked && (
+                        <ActionButton
+                          label="Kullanıcıyı Engelle"
+                          icon={ShieldAlert}
+                          onClick={() => handleBlockUser(listing, true)}
+                          className="bg-white text-turco ring-turco/10"
+                        />
+                      )}
+                      {listing.userId && listing.ownerBlocked && (
+                        <ActionButton
+                          label="Engeli Kaldır"
+                          icon={CheckCircle2}
+                          onClick={() => handleBlockUser(listing, false)}
+                          className="bg-emerald-50 text-emerald-700 ring-emerald-200"
                         />
                       )}
                       <ActionButton

@@ -9,7 +9,7 @@ const navItems = [
   { id: 'nasil-calisir', label: 'Nasıl Çalışır' },
 ];
 
-export default function Header({ currentPage, onNavigate }) {
+export default function Header({ currentPage, onNavigate, user, onLogout }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -24,6 +24,16 @@ export default function Header({ currentPage, onNavigate }) {
     onNavigate(page);
     setOpen(false);
   };
+
+  const accountItems = user
+    ? [
+        { id: 'hesabim', label: 'Hesabım' },
+        { id: 'ilanlarim', label: 'İlanlarım' },
+      ]
+    : [
+        { id: 'giris', label: 'Giriş Yap' },
+        { id: 'kayit-ol', label: 'Kayıt Ol' },
+      ];
 
   return (
     <motion.header
@@ -51,32 +61,36 @@ export default function Header({ currentPage, onNavigate }) {
           </span>
         </motion.button>
 
-        <nav className="hidden items-center gap-1 rounded-full border border-navy/10 bg-white/70 p-1 shadow-sm backdrop-blur-2xl md:flex" aria-label="Ana menü">
+        <nav className="hidden items-center gap-1 rounded-full border border-navy/10 bg-white/70 p-1 shadow-sm backdrop-blur-2xl lg:flex" aria-label="Ana menü">
           {navItems.map((item) => (
+            <NavButton key={item.id} item={item} currentPage={currentPage} onClick={() => selectPage(item.id)} />
+          ))}
+        </nav>
+
+        <div className="hidden items-center gap-2 md:flex">
+          {accountItems.map((item) => (
             <button
               key={item.id}
               type="button"
               onClick={() => selectPage(item.id)}
-              className={`relative rounded-full px-4 py-2.5 text-sm font-extrabold transition ${
-                currentPage === item.id ? 'text-turco' : 'text-navy/68 hover:text-navy'
+              className={`rounded-full px-4 py-2.5 text-sm font-extrabold transition ${
+                item.id === 'kayit-ol' ? 'bg-turco text-white shadow-sm' : 'text-navy/68 hover:text-navy'
               }`}
             >
-              {currentPage === item.id && (
-                <motion.span
-                  className="absolute inset-0 rounded-full bg-white shadow-sm"
-                  layoutId="nav-pill"
-                  transition={{ type: 'spring', stiffness: 420, damping: 34 }}
-                />
-              )}
-              <span className="relative z-10">{item.label}</span>
+              {item.label}
             </button>
           ))}
-        </nav>
+          {user && (
+            <button type="button" onClick={onLogout} className="rounded-full bg-navy px-4 py-2.5 text-sm font-extrabold text-white shadow-sm">
+              Çıkış Yap
+            </button>
+          )}
+        </div>
 
         <motion.button
           type="button"
           onClick={() => setOpen((value) => !value)}
-          className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-navy shadow-sm ring-1 ring-navy/10 md:hidden"
+          className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-navy shadow-sm ring-1 ring-navy/10 lg:hidden"
           aria-label="Menüyü aç veya kapat"
           whileTap={{ scale: 0.92 }}
         >
@@ -87,7 +101,7 @@ export default function Header({ currentPage, onNavigate }) {
       <AnimatePresence>
         {open && (
           <motion.nav
-            className="border-t border-navy/10 bg-white/92 px-4 py-3 backdrop-blur-2xl md:hidden"
+            className="border-t border-navy/10 bg-white/92 px-4 py-3 backdrop-blur-2xl lg:hidden"
             aria-label="Mobil menü"
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -95,7 +109,7 @@ export default function Header({ currentPage, onNavigate }) {
             transition={{ duration: 0.22 }}
           >
             <div className="mx-auto grid max-w-7xl gap-2">
-              {navItems.map((item) => (
+              {[...navItems, ...accountItems].map((item) => (
                 <button
                   key={item.id}
                   type="button"
@@ -107,10 +121,36 @@ export default function Header({ currentPage, onNavigate }) {
                   {item.label}
                 </button>
               ))}
+              {user && (
+                <button type="button" onClick={onLogout} className="rounded-2xl px-4 py-3 text-left text-sm font-extrabold text-turco transition hover:bg-blush">
+                  Çıkış Yap
+                </button>
+              )}
             </div>
           </motion.nav>
         )}
       </AnimatePresence>
     </motion.header>
+  );
+}
+
+function NavButton({ item, currentPage, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative rounded-full px-4 py-2.5 text-sm font-extrabold transition ${
+        currentPage === item.id ? 'text-turco' : 'text-navy/68 hover:text-navy'
+      }`}
+    >
+      {currentPage === item.id && (
+        <motion.span
+          className="absolute inset-0 rounded-full bg-white shadow-sm"
+          layoutId="nav-pill"
+          transition={{ type: 'spring', stiffness: 420, damping: 34 }}
+        />
+      )}
+      <span className="relative z-10">{item.label}</span>
+    </button>
   );
 }

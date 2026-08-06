@@ -75,6 +75,10 @@ function fromDbListing(listing) {
     contact: listing.contact_info ?? listing.contact ?? '',
     phoneNumber: listing.phone_number,
     status: listing.status || 'pending',
+    userId: listing.user_id || '',
+    ownerEmail: listing.owner_email || listing.profiles?.email || '',
+    ownerName: listing.profiles?.full_name || listing.full_name || '',
+    ownerBlocked: Boolean(listing.profiles?.is_blocked),
     imageFileNames: listing.image_file_names || [],
     imageUrls,
     image_urls: imageUrls,
@@ -84,7 +88,10 @@ function fromDbListing(listing) {
 export async function fetchListings({ includePending = false } = {}) {
   assertSupabaseConfigured();
 
-  let query = supabase.from(LISTINGS_TABLE).select('*').order('created_at', { ascending: false });
+  let query = supabase
+    .from(LISTINGS_TABLE)
+    .select('*')
+    .order('created_at', { ascending: false });
 
   if (!includePending) {
     query = query.eq('status', 'approved');
@@ -99,7 +106,36 @@ export async function fetchListings({ includePending = false } = {}) {
   return (data || []).map(fromDbListing);
 }
 
+export async function fetchAdminListings() {
+  assertSupabaseConfigured();
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    throw new Error('Admin oturumu bulunamadı.');
+  }
+
+  const response = await fetch('/api/admin-listings', {
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+    },
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'Admin ilanları yüklenemedi.');
+  }
+
+  return (payload.listings || []).map(fromDbListing);
+}
+
 export async function createListing(listing) {
+  assertSupabaseConfigured();
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    throw new Error('İlan vermek için giriş yapmalısınız.');
+  }
+
   const formData = new FormData();
 
   [
@@ -128,6 +164,9 @@ export async function createListing(listing) {
 
   const response = await fetch('/api/listings', {
     method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+    },
     body: formData,
   });
 
@@ -138,6 +177,71 @@ export async function createListing(listing) {
   }
 
   return fromDbListing(payload.listing);
+}
+
+export async function fetchMyListings() {
+  assertSupabaseConfigured();
+
+  const { data, error } = await supabase
+    .from(LISTINGS_TABLE)
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`İlanlarım yüklenemedi: ${error.message}`);
+  }
+
+  return (data || []).map(fromDbListing);
+}
+
+export async function updateOwnListing(listingId, updates) {
+  assertSupabaseConfigured();
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    throw new Error('İlan düzenlemek için giriş yapmalısınız.');
+  }
+
+  const response = await fetch('/api/update-own-listing', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ listingId, ...updates }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'İlan güncellenemedi.');
+  }
+
+  return fromDbListing(payload.listing);
+}
+
+export async function deleteOwnListing(listingId) {
+  assertSupabaseConfigured();
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError || !sessionData.session?.access_token) {
+    throw new Error('İlan silmek için giriş yapmalısınız.');
+  }
+
+  const response = await fetch('/api/user-delete-listing', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${sessionData.session.access_token}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ listingId }),
+  });
+
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(payload.error || 'İlan silinemedi.');
+  }
 }
 
 export async function updateListingStatus(listingId, status) {
