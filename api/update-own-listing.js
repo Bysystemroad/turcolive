@@ -88,7 +88,12 @@ export default async function handler(req, res) {
       return;
     }
 
-    if (!['pending', 'approved'].includes(listing.status || 'pending')) {
+    if ((listing.status || 'pending') === 'spam') {
+      sendJson(res, 403, { error: 'Bu ilan yönetici tarafından spam olarak işaretlendiği için düzenlenemez.' });
+      return;
+    }
+
+    if (!['pending', 'approved', 'rejected'].includes(listing.status || 'pending')) {
       sendJson(res, 403, { error: 'Bu ilan şu anda düzenlenemez.' });
       return;
     }

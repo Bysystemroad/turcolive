@@ -168,18 +168,14 @@ create policy "Users can update own listings"
   on public.listings
   for update
   to authenticated
-  using (auth.uid() = user_id and not public.is_current_user_blocked())
-  with check (
-    auth.uid() = user_id
-    and not public.is_current_user_blocked()
-    and status in ('pending', 'approved')
-  );
+  using (false)
+  with check (false);
 
 create policy "Users can delete own listings"
   on public.listings
   for delete
   to authenticated
-  using (auth.uid() = user_id and not public.is_current_user_blocked());
+  using (false);
 
 drop policy if exists "Admin users can read own record" on public.admin_users;
 drop policy if exists "Admins can read admin users" on public.admin_users;

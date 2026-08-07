@@ -123,7 +123,7 @@ export default function MyListingsPage({ user, onNavigate }) {
         <p className="text-sm font-black uppercase tracking-[0.2em] text-turco">İlanlarım</p>
         <h1 className="mt-3 text-4xl font-black tracking-tight text-navy">Paylaştığınız ilanlar</h1>
         <p className="mt-4 max-w-2xl text-sm font-semibold leading-6 text-navy/60">
-          Onaylı bir ilanı düzenlemek isterseniz ilan yeniden kontrol sürecine alınmalıdır. Şimdilik düzenleme talepleri için ilanı silip yeniden gönderebilirsiniz.
+          İlanınızı istediğiniz zaman düzenleyebilirsiniz. Yaptığınız değişiklikler kontrol edilmek üzere tekrar gönderilir ve onaylandıktan sonra yeniden yayınlanır.
         </p>
         {message && <div className="mt-6 rounded-2xl bg-blush px-4 py-3 text-sm font-extrabold text-turco">{message}</div>}
         <div className="mt-8 grid gap-4">
@@ -164,11 +164,16 @@ export default function MyListingsPage({ user, onNavigate }) {
                     </>
                   ) : (
                     <>
-                      {['pending', 'approved'].includes(listing.status || 'pending') && (
+                      {['pending', 'approved', 'rejected'].includes(listing.status || 'pending') && (
                         <button type="button" onClick={() => startEdit(listing)} className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-navy ring-1 ring-navy/10">
                           <Pencil size={16} />
                           Düzenle
                         </button>
+                      )}
+                      {(listing.status || 'pending') === 'spam' && (
+                        <p className="max-w-xs text-sm font-extrabold leading-5 text-turco">
+                          Bu ilan yönetici tarafından spam olarak işaretlendiği için düzenlenemez.
+                        </p>
                       )}
                       <button type="button" onClick={() => handleDelete(listing.id)} className="inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-black text-turco ring-1 ring-turco/10">
                         <Trash2 size={16} />
