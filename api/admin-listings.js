@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     if (userIds.length > 0) {
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('id,full_name,email,is_blocked')
+        .select('id,full_name,email,phone,is_blocked')
         .in('id', userIds);
 
       if (profilesError) {

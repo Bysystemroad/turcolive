@@ -1,9 +1,10 @@
 import { motion } from 'framer-motion';
-import { CheckCircle2, LogOut, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
+import { CheckCircle2, Eye, LogOut, RefreshCw, ShieldAlert, Trash2, XCircle } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { getCurrentAdminUser, signInAdmin, signOutAdmin } from '../services/adminAuth.js';
 import { deleteListing, fetchAdminListings, updateListingStatus } from '../services/listings.js';
 import { setUserBlocked } from '../services/adminUsers.js';
+import ListingDetailView from '../components/ListingDetailView.jsx';
 
 const statusLabels = {
   pending: 'Beklemede',
@@ -28,6 +29,7 @@ export default function AdminPage() {
   const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [selectedListingId, setSelectedListingId] = useState('');
 
   const counts = useMemo(() => {
     return ['pending', 'approved', 'rejected', 'spam'].reduce((result, status) => {
@@ -41,6 +43,7 @@ export default function AdminPage() {
     try {
       const data = await fetchAdminListings();
       setListings(data);
+      setSelectedListingId((currentId) => (currentId && data.some((listing) => listing.id === currentId) ? currentId : ''));
       setMessage('');
     } catch (error) {
       setMessage(error.message || 'İlanlar yüklenemedi.');
@@ -106,6 +109,7 @@ export default function AdminPage() {
       await signOutAdmin();
       setAuthorized(false);
       setListings([]);
+      setSelectedListingId('');
       setMessage('');
     } catch (error) {
       setMessage(error.message || 'Çıkış yapılamadı.');
@@ -122,10 +126,12 @@ export default function AdminPage() {
     try {
       const updatedListing = await updateListingStatus(listingId, status);
       setListings((current) => current.map((listing) => (listing.id === listingId ? updatedListing : listing)));
-      setMessage('');
+      setMessage('İlan durumu güncellendi.');
+      return true;
     } catch (error) {
       setListings(previousListings);
       setMessage(error.message || 'İlan durumu güncellenemedi.');
+      return false;
     }
   };
 
@@ -133,9 +139,12 @@ export default function AdminPage() {
     try {
       await deleteListing(listingId);
       setListings((current) => current.filter((listing) => listing.id !== listingId));
-      setMessage('');
+      setSelectedListingId((currentId) => (currentId === listingId ? '' : currentId));
+      setMessage('İlan silindi.');
+      return true;
     } catch (error) {
       setMessage(error.message || 'İlan silinemedi.');
+      return false;
     }
   };
 
@@ -153,6 +162,26 @@ export default function AdminPage() {
     } catch (error) {
       setListings(previousListings);
       setMessage(error.message || 'Kullanıcı durumu güncellenemedi.');
+    }
+  };
+
+  const selectedListing = listings.find((listing) => listing.id === selectedListingId) || null;
+
+  const handleReviewStatusChange = async (listingId, status) => {
+    const ok = await handleStatusChange(listingId, status);
+    if (ok) {
+      await loadAdminListings();
+      setSelectedListingId('');
+      setMessage('İlan moderasyon kuyruğuna göre güncellendi.');
+    }
+  };
+
+  const handleReviewDelete = async (listingId) => {
+    const ok = await handleDelete(listingId);
+    if (ok) {
+      await loadAdminListings();
+      setSelectedListingId('');
+      setMessage('İlan silindi.');
     }
   };
 
@@ -211,6 +240,31 @@ export default function AdminPage() {
             {authChecking ? 'Giriş yapılıyor' : 'Admin Paneline Gir'}
           </motion.button>
         </form>
+      </section>
+    );
+  }
+
+  if (selectedListing) {
+    return (
+      <section className="bg-cream">
+        <ListingDetailView
+          listing={selectedListing}
+          onBack={() => setSelectedListingId('')}
+          onNavigate={() => {}}
+          backLabel="Admin kuyruğuna dön"
+          showPublicCta={false}
+          sidebarExtra={
+            <AdminReviewPanel
+              listing={selectedListing}
+              statusLabels={statusLabels}
+              statusClasses={statusClasses}
+              onStatusChange={handleReviewStatusChange}
+              onDelete={handleReviewDelete}
+            />
+          }
+        >
+          <AdminListingMeta listing={selectedListing} />
+        </ListingDetailView>
       </section>
     );
   }
@@ -301,6 +355,12 @@ export default function AdminPage() {
                       )}
                     </div>
                     <div className="flex flex-wrap gap-2 lg:justify-end">
+                      <ActionButton
+                        label="İlanı İncele"
+                        icon={Eye}
+                        onClick={() => setSelectedListingId(listing.id)}
+                        className="bg-white text-navy ring-navy/10"
+                      />
                       {status !== 'approved' && (
                         <ActionButton
                           label="Onayla"
@@ -377,3 +437,90 @@ function ActionButton({ label, icon: Icon, onClick, className }) {
     </motion.button>
   );
 }
+
+
+function AdminListingMeta({ listing }) {
+  const createdDate = formatDate(listing.createdAt);
+  const updatedDate = formatDate(listing.updatedAt);
+
+  return (
+    <motion.div variants={fadeInVariant} className="mt-5 rounded-[2rem] bg-white p-6 shadow-card ring-1 ring-navy/10">
+      <h2 className="text-2xl font-black text-navy">Admin bilgileri</h2>
+      <div className="mt-5 grid gap-3 sm:grid-cols-2">
+        <MetaItem label="İlan sahibi" value={listing.ownerName || listing.fullName || 'Bilinmiyor'} />
+        <MetaItem label="Sahip e-posta" value={listing.ownerEmail || 'E-posta yok'} />
+        <MetaItem label="Sahip telefon" value={listing.ownerPhone || listing.phoneNumber || 'Telefon yok'} />
+        <MetaItem label="İlan telefonu" value={listing.phoneNumber || 'Telefon yok'} />
+        <MetaItem label="Durum" value={statusLabels[listing.status] || listing.status || 'Beklemede'} />
+        <MetaItem label="Oluşturulma" value={createdDate} />
+        <MetaItem label="Güncellenme" value={updatedDate} />
+        <MetaItem label="Kullanıcı durumu" value={listing.ownerBlocked ? 'Engelli' : 'Aktif'} />
+        <MetaItem label="user_id" value={listing.userId || 'Yok'} className="sm:col-span-2" />
+      </div>
+    </motion.div>
+  );
+}
+
+function AdminReviewPanel({ listing, statusLabels, statusClasses, onStatusChange, onDelete }) {
+  const status = listing.status || 'pending';
+
+  return (
+    <div className="mt-5 border-t border-navy/10 pt-5">
+      <p className="text-xs font-black uppercase tracking-[0.16em] text-navy/40">Admin moderasyon</p>
+      <span className={
+        `mt-3 inline-flex rounded-full px-3 py-1 text-xs font-black ring-1 ${statusClasses[status] || statusClasses.pending}`
+      }>
+        {statusLabels[status] || status}
+      </span>
+      <div className="mt-4 grid gap-2">
+        {status !== 'approved' && (
+          <ActionButton label="Onayla" icon={CheckCircle2} onClick={() => onStatusChange(listing.id, 'approved')} className="bg-emerald-50 text-emerald-700 ring-emerald-200" />
+        )}
+        {status !== 'rejected' && (
+          <ActionButton label="Reddet" icon={XCircle} onClick={() => onStatusChange(listing.id, 'rejected')} className="bg-blush text-turco ring-turco/10" />
+        )}
+        {status !== 'spam' && (
+          <ActionButton
+            label="Spam"
+            icon={ShieldAlert}
+            onClick={() => {
+              if (window.confirm('Bu ilan spam olarak işaretlensin mi?')) onStatusChange(listing.id, 'spam');
+            }}
+            className="bg-navy text-white ring-navy/10"
+          />
+        )}
+        <ActionButton
+          label="Sil"
+          icon={Trash2}
+          onClick={() => {
+            if (window.confirm('Bu ilan silinsin mi?')) onDelete(listing.id);
+          }}
+          className="bg-white text-navy ring-navy/10"
+        />
+      </div>
+    </div>
+  );
+}
+
+function MetaItem({ label, value, className = '' }) {
+  return (
+    <div className={`rounded-3xl bg-porcelain p-4 ${className}`}>
+      <p className="text-xs font-black uppercase tracking-[0.14em] text-navy/38">{label}</p>
+      <p className="mt-2 break-words text-sm font-black text-navy">{value || 'Yok'}</p>
+    </div>
+  );
+}
+
+function formatDate(value) {
+  if (!value) return 'Yok';
+  try {
+    return new Intl.DateTimeFormat('tr-TR', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value));
+  } catch {
+    return value;
+  }
+}
+
+const fadeInVariant = {
+  hidden: { opacity: 0, y: 18 },
+  show: { opacity: 1, y: 0 },
+};
