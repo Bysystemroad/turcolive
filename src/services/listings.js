@@ -1,6 +1,7 @@
 import { isSupabaseConfigured, supabase } from '../lib/supabaseClient.js';
 
 const LISTINGS_TABLE = 'listings';
+const PUBLIC_LISTINGS_VIEW = 'approved_listings_public';
 const LISTING_PHOTOS_BUCKET = 'listing-photos';
 const CITY_ALIASES = {
   Floransa: 'Firenze',
@@ -90,14 +91,29 @@ function fromDbListing(listing) {
 export async function fetchListings({ includePending = false } = {}) {
   assertSupabaseConfigured();
 
-  let query = supabase
-    .from(LISTINGS_TABLE)
-    .select('*')
-    .order('created_at', { ascending: false });
+  const publicColumns = [
+    'id',
+    'created_at',
+    'full_name',
+    'title',
+    'city',
+    'address',
+    'monthly_rent',
+    'deposit',
+    'room_type',
+    'house_type',
+    'target_group',
+    'gender_preference',
+    'people_count',
+    'description',
+    'contact_info',
+    'phone_number',
+    'image_urls',
+  ].join(',');
 
-  if (!includePending) {
-    query = query.eq('status', 'approved');
-  }
+  const query = includePending
+    ? supabase.from(LISTINGS_TABLE).select('*').order('created_at', { ascending: false })
+    : supabase.from(PUBLIC_LISTINGS_VIEW).select(publicColumns).order('created_at', { ascending: false });
 
   const { data, error } = await query;
 

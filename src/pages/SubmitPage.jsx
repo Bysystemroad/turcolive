@@ -46,6 +46,7 @@ const maxImageSizeBytes = 8 * 1024 * 1024;
 const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const allowedImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
 const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+const turnstileAction = 'listing_submit';
 
 function useObjectUrls(files) {
   const urls = useMemo(() => files.map((file) => URL.createObjectURL(file)), [files]);
@@ -400,6 +401,7 @@ export default function SubmitPage({ onSubmit }) {
                 <CaptchaField
                   error={errors.captchaToken}
                   siteKey={turnstileSiteKey}
+                  action={turnstileAction}
                   onVerify={(token) => update('captchaToken', token)}
                 />
               </motion.div>
@@ -477,7 +479,7 @@ function EuroInput({ value, onChange, required = false, error = '' }) {
   );
 }
 
-function CaptchaField({ siteKey, onVerify, error = '' }) {
+function CaptchaField({ siteKey, action, onVerify, error = '' }) {
   const containerRef = useRef(null);
   const widgetIdRef = useRef(null);
   const onVerifyRef = useRef(onVerify);
@@ -498,6 +500,7 @@ function CaptchaField({ siteKey, onVerify, error = '' }) {
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
         sitekey: siteKey,
         callback: (token) => onVerifyRef.current(token),
+        action,
         'expired-callback': () => onVerifyRef.current(''),
         'error-callback': () => onVerifyRef.current(''),
       });

@@ -137,14 +137,41 @@ drop policy if exists "Public can read approved listings" on public.listings;
 drop policy if exists "Users can read own listings" on public.listings;
 drop policy if exists "Users can update own listings" on public.listings;
 drop policy if exists "Users can delete own listings" on public.listings;
+drop policy if exists "Users and admins can read private listing rows" on public.listings;
 
-create policy "Public can read approved listings"
+drop view if exists public.approved_listings_public;
+create view public.approved_listings_public
+with (security_invoker = false)
+as
+select
+  id,
+  created_at,
+  full_name,
+  title,
+  city,
+  address,
+  monthly_rent,
+  deposit,
+  room_type,
+  house_type,
+  target_group,
+  gender_preference,
+  people_count,
+  description,
+  contact_info,
+  phone_number,
+  image_urls
+from public.listings
+where status = 'approved';
+
+grant select on public.approved_listings_public to anon, authenticated;
+
+create policy "Users and admins can read private listing rows"
   on public.listings
   for select
-  to anon, authenticated
+  to authenticated
   using (
-    status = 'approved'
-    or public.is_turcolive_admin()
+    public.is_turcolive_admin()
     or auth.uid() = user_id
   );
 
